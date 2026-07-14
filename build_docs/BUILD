@@ -11,28 +11,16 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-load(
-    "@score_tooling//bazel/rules/rules_score:rules_score.bzl",
-    "assumptions_of_use",
-    "dependability_analysis",
-    "fmea",
-)
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 
-# Failure Modes
-fmea(
-    name = "fmea",
-    failuremodes = ["failure_modes.trlc"],
-    visibility = ["//visibility:public"],
-)
-
-assumptions_of_use(
-    name = "assumptions_of_use",
-    srcs = ["aou.trlc"],
-    visibility = ["//visibility:public"],
-)
-
-dependability_analysis(
-    name = "dependability_analysis",
-    fmea = [":fmea"],
+# Runnable target that copies //docs/sphinx:sphinx_doc HTML output into
+# _build/html/ at the workspace root.  Aliased from //:docs so the
+# cicd-workflows reusable docs.yml can call `bazel run //:docs` as usual.
+sh_binary(
+    name = "runner",
+    testonly = True,
+    srcs = ["docs_runner.sh"],
+    data = ["//docs/sphinx:sphinx_doc"],
+    target_compatible_with = ["@platforms//os:linux"],
     visibility = ["//visibility:public"],
 )
