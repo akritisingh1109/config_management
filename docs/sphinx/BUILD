@@ -11,28 +11,25 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-load(
-    "@score_tooling//bazel/rules/rules_score:rules_score.bzl",
-    "assumptions_of_use",
-    "dependability_analysis",
-    "fmea",
-)
+load("@score_tooling//bazel/rules/rules_score:rules_score.bzl", "sphinx_module")
 
-# Failure Modes
-fmea(
-    name = "fmea",
-    failuremodes = ["failure_modes.trlc"],
-    visibility = ["//visibility:public"],
-)
-
-assumptions_of_use(
-    name = "assumptions_of_use",
-    srcs = ["aou.trlc"],
-    visibility = ["//visibility:public"],
-)
-
-dependability_analysis(
-    name = "dependability_analysis",
-    fmea = [":fmea"],
+sphinx_module(
+    name = "sphinx_doc",
+    testonly = True,
+    srcs = glob(
+        [
+            "**/*.rst",
+            "**/*.md",
+            "**/*.png",
+            "**/*.svg",
+            "**/*.puml",
+        ],
+        allow_empty = True,
+    ),
+    docs_library_deps = [
+        "//score/config_management/dependability:config_management_rst",
+    ],
+    index = "index.rst",
+    target_compatible_with = ["@platforms//os:linux"],
     visibility = ["//visibility:public"],
 )

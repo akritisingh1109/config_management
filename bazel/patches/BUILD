@@ -11,28 +11,4 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-load(
-    "@score_tooling//bazel/rules/rules_score:rules_score.bzl",
-    "assumptions_of_use",
-    "dependability_analysis",
-    "fmea",
-)
-
-# Failure Modes
-fmea(
-    name = "fmea",
-    failuremodes = ["failure_modes.trlc"],
-    visibility = ["//visibility:public"],
-)
-
-assumptions_of_use(
-    name = "assumptions_of_use",
-    srcs = ["aou.trlc"],
-    visibility = ["//visibility:public"],
-)
-
-dependability_analysis(
-    name = "dependability_analysis",
-    fmea = [":fmea"],
-    visibility = ["//visibility:public"],
-)
+exports_files(glob(["*.patch"]))
