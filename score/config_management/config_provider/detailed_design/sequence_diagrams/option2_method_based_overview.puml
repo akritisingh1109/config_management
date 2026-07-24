@@ -1,0 +1,59 @@
+@startuml Option2_MethodBased_Overview
+
+title Option 2: Method-based ParameterSet Distribution (mw::com IPC)
+
+participant "ConfigDaemon" as ConfigDaemon
+participant "ParameterSetCollection" as PSC
+participant "mw::com Skeleton\n(InternalConfigProviderInterface)" as Skeleton
+database "Shared Memory\n(pre-allocated, max payload size)" as SHM
+participant "mw::com Proxy\n(SemiDynamicSingleInstantiationStrategy)" as Proxy
+participant "Polling Thread" as Poller
+participant "ParameterSet Cache" as Cache
+participant "ConfigProvider" as CP
+
+== Initialization ==
+
+ConfigDaemon -> Skeleton : Create(instance_specifier)
+ConfigDaemon -> Skeleton : RegisterHandler(get_parameterset)
+Skeleton -> SHM : register shared memory region for method call
+SHM --> Skeleton
+Skeleton --> ConfigDaemon
+
+
+note over Proxy
+    additional_shm_size_bytes = meta info + max ParameterSet payload + max ParameterSet name length
+    all of which can be estimated statically at compile time
+end note
+
+CP -> Proxy : Create proxy via\nSemiDynamicSingleInstantiationStrategy\n(additional_shm_size_bytes)
+Proxy -> SHM : map into proxy's shared memory region
+SHM --> Proxy
+Proxy --> CP
+
+
+== Runtime: GetParameterSet ==
+
+ConfigDaemon -> Skeleton : OfferService
+
+    CP -> Proxy : get_parameterset.Allocate()
+    Proxy -> SHM : allocate ParameterSetName buffer
+    SHM --> Proxy : return ParameterSetName buffer
+    CP -> Proxy : fill name bytes into ParameterSetName
+    CP -> Proxy : get_parameterset(ParameterSetName)
+    Proxy -> SHM : write request into shared memory
+    SHM -> Skeleton : method handler invoked
+    Skeleton -> PSC : look up ParameterSet by name
+    PSC --> Skeleton : serialized ParameterSetContent\n(or kParameterSetNotFoundContent)
+    Skeleton -> SHM : write ParameterSetContent into result buffer
+    SHM --> Proxy : method returns ParameterSetContent
+    Proxy --> CP : Result<ParameterSetContent>
+    CP --> CP : parse JSON and return
+
+note over SHM
+    A bad usage of the mw::com method with an
+    undersized pre-allocated SHM may cause a
+    runtime memory issue if the actual payload
+    exceeds the estimated max size.
+end note
+
+@enduml

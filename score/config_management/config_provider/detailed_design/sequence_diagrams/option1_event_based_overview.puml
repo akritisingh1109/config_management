@@ -1,0 +1,40 @@
+@startuml Option1_EventBased_Overview
+
+title Option 1: Event-based ParameterSet Distribution (mw::com IPC)
+
+participant "Filesystem" as FS
+participant "ParameterSetCollection" as PSC
+participant "ConfigDaemon" as ConfigDaemon
+participant "mw::com Skeleton\n(ParameterSetEventServicePPort)" as Skeleton
+database "Shared Memory" as SHM
+participant "mw::com Proxy" as Proxy
+participant "ConfigProvider" as CP
+
+== Initialization ==
+
+ConfigDaemon -> FS : read payload size from\n buffer_size_needs.json
+FS --> ConfigDaemon : payload size
+ConfigDaemon -> Skeleton : create Skeleton with each ParameterSet\n as a separate event service port
+Skeleton -> SHM : allocate shared memory\n(2 slots per ParameterSet event)
+
+== Runtime: ParameterSet Update ==
+
+ConfigDaemon -> Skeleton: OfferService
+
+CP -> Proxy : subscribe to ParameterSet events\n(by registered name)
+Proxy -> Skeleton
+Skeleton --> Proxy
+Proxy --> CP
+
+PSC -> Skeleton : send(event) for each ParameterSet
+Skeleton -> SHM : write event data\n(slot 0 or slot 1)
+SHM --> Skeleton
+Skeleton --> PSC
+
+
+CP -> Proxy : GetParameterSet()
+Proxy -> SHM : GetNewSamples()
+SHM --> Proxy : return new samples
+Proxy --> CP : filter and get the latest\nsample for the requested ParameterSet
+
+@enduml
