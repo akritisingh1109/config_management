@@ -119,6 +119,13 @@ ScoreReq.FeatReq ParameterInitialQualifier {
     derived_from = [AssumedSystemRequirements.SafeConfiguration@1]
     version = 1
 }
+
+ScoreReq.FeatReq ParameterSetAquisitionAvailability {
+    description = "Parameter set acquisition method shall be used in a controlled way to prevent any application termination as cause of communication misconfiguration."
+    safety = ScoreReq.Asil.QM
+    derived_from = [AssumedSystemRequirements.SafeConfiguration@1]
+    version = 1
+}
 // endsection "ParameterQualification"
 
 /* broken_link_c/issue/15804755 */
