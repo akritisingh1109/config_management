@@ -31,7 +31,7 @@ cc_library(
         "//score/config_management/config_daemon/code/factory:interface",
         "@score_baselibs//score/concurrency:interruptible_wait",
         "@score_baselibs//score/scope_exit",
-        "@score_lifecycle_health//src/lifecycle_client_lib:application",
+        "@score_lifecycle_health//score/launch_manager:application_cc",
         "@score_logging//score/mw/log",
     ],
 )
@@ -52,7 +52,7 @@ cc_library(
         "//score/config_management/config_daemon/code/factory:interface_for_unit_test",
         "//score/config_management/config_daemon/code/fault_event_reporter",
         "@score_baselibs//score/scope_exit",
-        "@score_lifecycle_health//src/lifecycle_client_lib:application_mock",
+        "@score_lifecycle_health//score/launch_manager:applicationcontext_mock_cc",
         "@score_logging//score/mw/log",
     ],
 )
@@ -68,6 +68,7 @@ cc_test(
     visibility = [
         "//requirements:__pkg__",
         "//score/config_management/config_daemon/code/app:__pkg__",
+        "//score/config_management/config_daemon/code/app/details:__pkg__",
     ],
     deps = [
         ":app_for_unit_test",
@@ -81,7 +82,7 @@ cc_test(
         "@score_baselibs//score/os/mocklib:stat_mock",
         "@score_communication//score/mw/service:factory",
         "@score_communication//score/mw/service:provided_service_container",
-        "@score_lifecycle_health//src/lifecycle_client_lib:applicationcontext",
-        "@score_lifecycle_health//src/lifecycle_client_lib:lifecycle_mock",
+        "@score_lifecycle_health//score/launch_manager:applicationcontext_cc",
+        "@score_lifecycle_health//score/launch_manager:lifecycle_mock_cc",
     ],
 )
