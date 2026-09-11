@@ -503,7 +503,7 @@ TEST(ParameterSetFormatTest, FormatAsKeyValuePairsPass)
 
     std::string parameter_set_expected_formatted_string = R"({
     "alg_abort_ccm_offset_distance": 100,
-    "alg_abort_ccm_offset_duration": 3.22199988,
+    "alg_abort_ccm_offset_duration": 3.222,
     "alg_abort_distance_countries": [
         "Germany",
         "France"
