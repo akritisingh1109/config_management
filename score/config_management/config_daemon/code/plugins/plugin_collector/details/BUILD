@@ -66,10 +66,10 @@ load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER
                 "//conditions:default": [
                     "//score/config_management/config_daemon/code/plugins/coding/plugin_creator:coding_plugin_creator_for_unit_test",
                     "//score/config_management/config_daemon/code/plugins/calibration_loader/plugin_creator:calibration_loader_plugin_creator_for_unit_test",
-                    "//score/config_management/config_daemon/code/plugins/calibration_loader/details:calibration_loader_plugin_impl_test",
+                    "//score/config_management/config_daemon/code/plugins/calibration_loader/details:calibration_loader_plugin_impl_for_test",
                     "//score/config_management/config_daemon/code/plugins/calibration_loader/factory/details:factory_impl_for_test",
                     "//score/config_management/config_daemon/code/plugins/runtime_calibration/plugin_creator:runtime_calibration_plugin_creator_for_unit_test",
-                    "//score/config_management/config_daemon/code/plugins/runtime_calibration/details:runtime_calibration_plugin_impl_test",
+                    "//score/config_management/config_daemon/code/plugins/runtime_calibration/details:runtime_calibration_plugin_impl_for_test",
                     "//score/config_management/config_daemon/code/plugins/runtime_calibration/factory/details:factory_impl_for_test",
                 ],
             }),
