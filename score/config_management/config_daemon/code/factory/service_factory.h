@@ -16,7 +16,7 @@
 
 #include "score/config_management/config_daemon/code/data_model/parameterset_collection.h"
 #include "score/config_management/config_daemon/code/services/internal_config_provider_service.h"
-#include "score/mw/service/provided_service_container.h"
+#include "score/mw/service/provided_services_container.h"
 
 #include <memory>
 
@@ -38,12 +38,12 @@ class ServiceFactory
     ServiceFactory& operator=(ServiceFactory&&) = delete;
     ServiceFactory& operator=(const ServiceFactory&) = delete;
 
-    virtual mw::service::ProvidedServiceContainer CreateInternalConfigProviderService(
+    virtual mw::service::ProvidedServicesContainer CreateInternalConfigProviderService(
         const std::shared_ptr<data_model::IParameterSetCollection> read_only_parameter_data_interface) const = 0;
     virtual LastUpdatedParameterSetSender CreateLastUpdatedParameterSetSender(
-        mw::service::ProvidedServiceContainer& services) = 0;
+        mw::service::ProvidedServicesContainer& services) = 0;
     virtual InitialQualifierStateSender CreateInitialQualifierStateSender(
-        mw::service::ProvidedServiceContainer& services) = 0;
+        mw::service::ProvidedServicesContainer& services) = 0;
 };
 
 }  // namespace config_daemon

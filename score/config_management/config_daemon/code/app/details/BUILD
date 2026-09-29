@@ -85,7 +85,7 @@ cc_test(
         "@googletest//:gtest_main",
         "@score_baselibs//score/os/mocklib:stat_mock",
         "@score_communication//score/mw/service:factory",
-        "@score_communication//score/mw/service:provided_service_container",
+        "@score_communication//score/mw/service:provided_services_container",
         "@score_lifecycle_health//score/launch_manager:applicationcontext_cc",
         "@score_lifecycle_health//score/launch_manager:lifecycle_mock_cc",
     ],

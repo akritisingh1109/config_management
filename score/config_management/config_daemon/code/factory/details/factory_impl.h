@@ -38,12 +38,12 @@ class FactoryImpl final : public Factory
     FactoryImpl& operator=(FactoryImpl&&) = delete;
     FactoryImpl& operator=(const FactoryImpl&) = delete;
 
-    mw::service::ProvidedServiceContainer CreateInternalConfigProviderService(
+    mw::service::ProvidedServicesContainer CreateInternalConfigProviderService(
         const std::shared_ptr<data_model::IParameterSetCollection> read_only_parameter_data_interface) const override;
     LastUpdatedParameterSetSender CreateLastUpdatedParameterSetSender(
-        mw::service::ProvidedServiceContainer& services) override;
+        mw::service::ProvidedServicesContainer& services) override;
     InitialQualifierStateSender CreateInitialQualifierStateSender(
-        mw::service::ProvidedServiceContainer& services) override;
+        mw::service::ProvidedServicesContainer& services) override;
 
     std::shared_ptr<data_model::IParameterSetCollectionManager> CreateParameterSetCollectionManager(
         std::vector<std::shared_ptr<IPlugin>>& plugins) const override;

@@ -32,20 +32,20 @@ FactoryImpl::FactoryImpl()
 {
 }
 
-mw::service::ProvidedServiceContainer FactoryImpl::CreateInternalConfigProviderService(
+mw::service::ProvidedServicesContainer FactoryImpl::CreateInternalConfigProviderService(
     const std::shared_ptr<data_model::IParameterSetCollection> read_only_parameter_data_interface) const
 {
     return service_factory_->CreateInternalConfigProviderService(read_only_parameter_data_interface);
 }
 
 LastUpdatedParameterSetSender FactoryImpl::CreateLastUpdatedParameterSetSender(
-    mw::service::ProvidedServiceContainer& services)
+    mw::service::ProvidedServicesContainer& services)
 {
     return service_factory_->CreateLastUpdatedParameterSetSender(services);
 }
 
 InitialQualifierStateSender FactoryImpl::CreateInitialQualifierStateSender(
-    mw::service::ProvidedServiceContainer& services)
+    mw::service::ProvidedServicesContainer& services)
 {
     return service_factory_->CreateInitialQualifierStateSender(services);
 }

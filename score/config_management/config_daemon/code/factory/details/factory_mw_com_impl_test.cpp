@@ -18,8 +18,7 @@
 #include "score/config_management/config_daemon/code/services/details/mw_com/internal_config_provider_service_impl.h"
 #include "score/config_management/config_daemon/code/services/internal_config_provider_service_mock.h"
 
-#include "score/mw/service/backend/mw_com/provided_service_builder.h"
-#include "score/mw/service/backend/mw_com/provided_service_decorator.h"
+#include "score/mw/service/provided_services_container.h"
 
 #include "platform/aas/config_management/lib/mw_com_types/internal_config_provider_type.h"
 #include "score/result/error.h"
@@ -88,18 +87,15 @@ TEST_F(TestServiceFactoryMwImpl, CreateInternalConfigProviderServiceSuccess)
     RecordProperty("TestType", "Interface test");
     RecordProperty("Verifies",
                    "::score::config_management::config_daemon::ServiceFactoryImpl::CreateInternalConfigProviderService()");
-    RecordProperty("Description", "Ensure a valid InternalConfigProviderService is created");
+    RecordProperty("Description",
+                   "This test verifies that the service factory creates an "
+                   "InternalConfigProviderService.");
 
     const auto parameter_data = std::make_shared<data_model::ParameterSetCollection>();
     auto provided_service_container = unit_->CreateInternalConfigProviderService(parameter_data);
 
-    ASSERT_EQ(provided_service_container.NumServices(), 1);
-    auto* services = provided_service_container.GetServices<mw::service::backend::mw_com::ProvidedServiceDecorator>();
-    ASSERT_NE(services, nullptr) << "Failed to get ProvidedServices from ProviderServicesContainer";
-
-    auto* internal_config_provider_service = services->Get<InternalConfigProviderService>();
-    EXPECT_NE(internal_config_provider_service, nullptr)
-        << "ProvidedServiceContainer doesn't contain InternalConfigProviderService";
+    ASSERT_EQ(provided_service_container.Size(), 1U);
+    EXPECT_NE(provided_service_container.Get<InternalConfigProviderService>(), nullptr);
 
     RecordProperty("Result", "CreateInternalConfigProviderServiceSuccess Passed");
 }
@@ -120,13 +116,7 @@ TEST_F(TestServiceFactoryMwImpl, CreateInternalConfigProviderService_InvalidPara
 
     auto provided_service_container = unit_->CreateInternalConfigProviderService(parameter_data);
 
-    ASSERT_EQ(provided_service_container.NumServices(), 1);
-
-    auto* services = provided_service_container.GetServices<mw::service::backend::mw_com::ProvidedServiceDecorator>();
-    ASSERT_NE(services, nullptr);
-
-    auto* internal_config_provider_service = services->Get<InternalConfigProviderService>();
-    EXPECT_NE(internal_config_provider_service, nullptr);
+    ASSERT_EQ(provided_service_container.Size(), 1U);
 
     auto bad_param = parameter_data->GetParameterSet("InvalidSet");
     EXPECT_FALSE(bad_param.has_value());
@@ -143,18 +133,14 @@ TEST_F(TestServiceFactoryMwImpl, CreateLastUpdatedParameterSetSender)
                    "This test ensures that CreateLastUpdatedParameterSetSender() returns a valid "
                    "LastUpdatedParameterSetSender callback");
 
-    using ProvidedServices = mw::service::backend::mw_com::ProvidedServices;
-    using ProvidedServiceBuilder = mw::service::ProvidedServiceBuilder;
-
-    mw::service::ProvidedServiceContainer mock_service_container{
-        ProvidedServices{}.Add<InternalConfigProviderServiceMock>()};
+    mw::service::ProvidedServicesContainer mock_service_container{};
+    ASSERT_TRUE(mock_service_container.Emplace<::testing::NiceMock<InternalConfigProviderServiceMock>>().has_value());
+    auto* mock_service_ptr = mock_service_container.Get<IInternalConfigProviderService>();
 
     auto last_updated_parameter_set_sender = unit_->CreateLastUpdatedParameterSetSender(mock_service_container);
     ASSERT_FALSE(last_updated_parameter_set_sender.empty());
-    auto* provided_services = mock_service_container.GetServices<ProvidedServiceBuilder::DecoratorType>();
-    EXPECT_CALL(
-        dynamic_cast<InternalConfigProviderServiceMock&>(*provided_services->Get<IInternalConfigProviderService>()),
-        SendLastUpdatedParameterSet("parameter_set_name"))
+    EXPECT_CALL(*dynamic_cast<InternalConfigProviderServiceMock*>(mock_service_ptr),
+                SendLastUpdatedParameterSet("parameter_set_name"))
         .Times(Exactly(1));
     std::invoke(last_updated_parameter_set_sender, "parameter_set_name");
 }
@@ -170,9 +156,7 @@ TEST_F(TestServiceFactoryMwImpl, CreateLastUpdatedParameterSetSenderFail)
                    "This test ensures that CreateLastUpdatedParameterSetSender() returns a no-op (non-empty) "
                    "callback if ProvidedServiceContainer does not contain InternalConfigProviderService");
 
-    using ProvidedServices = mw::service::backend::mw_com::ProvidedServices;
-
-    mw::service::ProvidedServiceContainer mock_service_container{ProvidedServices{}};
+    mw::service::ProvidedServicesContainer mock_service_container{};
     auto last_updated_parameter_set_sender = unit_->CreateLastUpdatedParameterSetSender(mock_service_container);
     ASSERT_FALSE(last_updated_parameter_set_sender.empty());
     EXPECT_FALSE(std::invoke(last_updated_parameter_set_sender, "parameter_set_name"));
@@ -189,20 +173,15 @@ TEST_F(TestServiceFactoryMwImpl, CreateInitialQualifierStateSender)
                    "This test ensures that CreateInitialQualifierStateSender() returns a valid "
                    "InitialQualifierStateSender callback");
 
-    using ProvidedServices = mw::service::backend::mw_com::ProvidedServices;
-    using ProvidedServiceBuilder = mw::service::ProvidedServiceBuilder;
-
-    mw::service::ProvidedServiceContainer mock_service_container{
-        ProvidedServices{}.Add<InternalConfigProviderServiceMock>()};
+    mw::service::ProvidedServicesContainer mock_service_container{};
+    ASSERT_TRUE(mock_service_container.Emplace<::testing::NiceMock<InternalConfigProviderServiceMock>>().has_value());
+    auto* mock_service_ptr = mock_service_container.Get<IInternalConfigProviderService>();
 
     auto initial_qualifier_state_sender = unit_->CreateInitialQualifierStateSender(mock_service_container);
     ASSERT_FALSE(initial_qualifier_state_sender.empty());
 
-    auto* provided_services = mock_service_container.GetServices<ProvidedServiceBuilder::DecoratorType>();
-
-    EXPECT_CALL(
-        dynamic_cast<InternalConfigProviderServiceMock&>(*provided_services->Get<IInternalConfigProviderService>()),
-        SetInitialQualifierState(InitialQualifierState::kQualified))
+    EXPECT_CALL(*dynamic_cast<InternalConfigProviderServiceMock*>(mock_service_ptr),
+                SetInitialQualifierState(InitialQualifierState::kQualified))
         .Times(Exactly(1));
     std::invoke(initial_qualifier_state_sender, InitialQualifierState::kQualified);
 }
@@ -218,9 +197,7 @@ TEST_F(TestServiceFactoryMwImpl, CreateInitialQualifierStateSenderFail)
                    "This test ensures that CreateInitialQualifierStateSender() returns a no-op (non-empty) callback if "
                    "ProvidedServiceContainer does not contain InternalConfigProviderService");
 
-    using ProvidedServices = mw::service::backend::mw_com::ProvidedServices;
-
-    mw::service::ProvidedServiceContainer mock_service_container{ProvidedServices{}};
+    mw::service::ProvidedServicesContainer mock_service_container{};
     auto initial_qualifier_state_sender = unit_->CreateInitialQualifierStateSender(mock_service_container);
     ASSERT_FALSE(initial_qualifier_state_sender.empty());
     std::invoke(initial_qualifier_state_sender, InitialQualifierState::kQualified);

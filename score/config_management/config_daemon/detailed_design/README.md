@@ -98,7 +98,7 @@ Some `Parameter` instances that are closely related are bundled into a `Paramete
 Besides, `InternalConfigProviderService` also updates the `InitialQualifierState`, see [Details for InitialQualifierState](./plugins/coding/README.md#315-output-interfaces).
 The most critical state is `Qualified`, when `InitialQualifierState` assumes this value, applications consuming the data are allowed to assume parameters are safe to be used. As stated in our Safety Goal, we shall never provide corrupted or disqualified data when `InitialQualifierState`=`Qualified`
 
-`ConfigDaemon` uses `Factory` to create `InternalConfigProviderService` and manages it via `mw::service::ProvidedServiceContainer` (from the `mw::service` library). Client applications use `ConfigProvider` to obtain or subscribe to `ParameterSet` instances from `ConfigDaemon`.
+`ConfigDaemon` uses `Factory` to create `InternalConfigProviderService` and manages it via `mw::service::ProvidedServicesContainer` (from the `mw::service` library), which starts a service as soon as it is added. If the service cannot be started, it is not added and `ConfigDaemon` cannot continue; see the risk described in [4.1 Execution Stages](#41-execution-stages). Client applications use `ConfigProvider` to obtain or subscribe to `ParameterSet` instances from `ConfigDaemon`.
 
 <details>
 <summary>InternalConfigProviderService Static Architecture</summary>
@@ -169,8 +169,12 @@ Sometimes `Plugin`s inside `ConfigDaemon` need to share some resource, for examp
 `ConfigDaemon`'s lifetime can be divided into three stages.
 
 1. During construction, the `main` function creates a `Factory` and passes it to the `ConfigDaemon` constructor. Inside the constructor, `ConfigDaemon` uses the factory to create the `ParameterSetCollection`.
-2. The `main` function then runs `ConfigDaemon` via the `LifecycleManager` by calling its `Initialize()` function. At this stage, `ConfigDaemon` creates plugins via the factory (as described in 3.3) and triggers non-blocking `Initialize()` calls on them. `ConfigDaemon` also creates and initializes `InternalConfigProviderService`.
-3. After successful initialization, `LifecycleManager` calls the `Run()` method of `ConfigDaemon` with a `stop_token` argument. `ConfigDaemon` executes the `Run()` functions of the plugins (created during initialization) sequentially and then offers `InternalConfigProviderService`. The process blocks indefinitely; `LifecycleManager` can unblock execution using the `stop_token` to enter shutdown sequence. Before returning to `main`, `ConfigDaemon` stops offering `InternalConfigProviderService` and calls the `Deinitialize()` function of the plugins.
+2. The `main` function then runs `ConfigDaemon` via the `LifecycleManager` by calling its `Initialize()` function. At this stage, `ConfigDaemon` creates plugins via the factory (as described in 3.3) and triggers non-blocking `Initialize()` calls on them.
+3. After successful initialization, `LifecycleManager` calls the `Run()` method of `ConfigDaemon` with a `stop_token` argument. `ConfigDaemon` loads the `ParameterSetCollection` from storage and creates `InternalConfigProviderService` via the factory, which starts and offers it. It then executes the `Run()` functions of the plugins (created during initialization) sequentially. The process blocks indefinitely; `LifecycleManager` can unblock execution using the `stop_token` to enter shutdown sequence. Before returning to `main`, `ConfigDaemon` stops offering `InternalConfigProviderService` and calls the `Deinitialize()` function of the plugins.
+
+If `InternalConfigProviderService` cannot be created or started (for example because offering the service fails), the container returned by the factory is empty. `ConfigDaemon::Run()` then logs an error and returns a failure code before the `Run()` function of any plugin is called. This fail-fast behavior is a deliberate design decision: `InternalConfigProviderService` is mandatory for `ConfigDaemon`, which does not continue without it.
+
+**Risk:** because no plugin is run in this case, the `CodingPlugin` is not executed and coding of the ECU is not possible for as long as the service cannot be offered. The failure ends the whole `ConfigDaemon` process, so the calibration plugin is not run either. This risk is accepted as part of the design decision above.
 
 <details>
 <summary>Execution Sequence Diagram</summary>

@@ -92,7 +92,7 @@ InternalConfigProviderService::InternalConfigProviderService(
     InternalConfigProviderService::SetInitialQualifierState(initial_qualifier_state_);
 }
 
-score::Result<InternalConfigProviderService> InternalConfigProviderService::Create(
+score::Result<std::unique_ptr<InternalConfigProviderService>> InternalConfigProviderService::Create(
     std::shared_ptr<InternalConfigProviderServiceReactor> internal_config_provider_service_reactor,
     const score::mw::com::InstanceSpecifier& instance_specifier)
 {
@@ -102,13 +102,13 @@ score::Result<InternalConfigProviderService> InternalConfigProviderService::Crea
         mw::log::LogError()
             << "InternalConfigProviderService::Create() - Failed to create InternalConfigProviderSkeleton: "
             << icp_skeleton_result.error();
-        return MakeUnexpected<InternalConfigProviderService>(icp_skeleton_result.error());
+        return MakeUnexpected<std::unique_ptr<InternalConfigProviderService>>(icp_skeleton_result.error());
     }
-    return InternalConfigProviderService{internal_config_provider_service_reactor,
-                                         std::move(icp_skeleton_result).value()};
+    return std::unique_ptr<InternalConfigProviderService>{new InternalConfigProviderService{
+        internal_config_provider_service_reactor, std::move(icp_skeleton_result).value()}};
 }
 
-void InternalConfigProviderService::StartService()
+Result<void> InternalConfigProviderService::Start()
 {
     mw::log::LogDebug() << "InternalConfigProviderService::" << __func__;
     auto handler = [this](score::config_management::config_daemon::mw_com_icp_types::ParameterSetContent& result,
@@ -161,9 +161,10 @@ void InternalConfigProviderService::StartService()
     {
         mw::log::LogError() << "Failed to Offer InvocationCount service due to error:" << offer_service_result.error();
     }
+    return offer_service_result;
 }
 
-void InternalConfigProviderService::StopService()
+void InternalConfigProviderService::Stop() noexcept
 {
 
     icp_skeleton_.StopOfferService();

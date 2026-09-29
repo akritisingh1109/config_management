@@ -34,20 +34,23 @@ using InternalConfigProviderSkeleton = score::mw::com::AsSkeleton<InternalConfig
 class InternalConfigProviderService final : public IInternalConfigProviderService
 {
   public:
-    static score::Result<InternalConfigProviderService> Create(
+    static score::Result<std::unique_ptr<InternalConfigProviderService>> Create(
         std::shared_ptr<InternalConfigProviderServiceReactor> internal_config_provider_service_reactor,
         const score::mw::com::InstanceSpecifier& instance_specifier);
+    InternalConfigProviderService(InternalConfigProviderService&&) noexcept = delete;
+    InternalConfigProviderService(const InternalConfigProviderService&) noexcept = delete;
 
     void SetInitialQualifierState(const config_daemon::InitialQualifierState initial_qualifier_state) noexcept override;
     bool SendLastUpdatedParameterSet(const std::string_view parameter_set_name) noexcept override;
 
-    void StartService() override;
-    void StopService() override;
+    Result<void> Start() override;
+    void Stop() noexcept override;
 
-  private:
     explicit InternalConfigProviderService(
         std::shared_ptr<InternalConfigProviderServiceReactor> internal_config_provider_service_reactor,
         InternalConfigProviderSkeleton icp_skeleton);
+
+  private:
     const std::shared_ptr<InternalConfigProviderServiceReactor> internal_config_provider_service_reactor_;
     InternalConfigProviderSkeleton icp_skeleton_;
     config_daemon::InitialQualifierState initial_qualifier_state_;
