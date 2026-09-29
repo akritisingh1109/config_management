@@ -63,7 +63,7 @@ TEST_F(InternalConfigProviderServiceMwComTest, StartService)
 
     auto result = InternalConfigProviderService::Create(reactor_mock_, instance_specifier);
     ASSERT_TRUE(result.has_value());
-    result.value().StartService();
+    ASSERT_TRUE(result.value()->Start().has_value());
 }
 
 TEST_F(InternalConfigProviderServiceMwComTest, StopService)
@@ -79,7 +79,7 @@ TEST_F(InternalConfigProviderServiceMwComTest, StopService)
 
     auto result = InternalConfigProviderService::Create(reactor_mock_, instance_specifier);
     ASSERT_TRUE(result.has_value());
-    result.value().StopService();
+    result.value()->Stop();
 }
 
 TEST_F(InternalConfigProviderServiceMwComTest, SetInitialQualifierState_AllEnumValues)
@@ -94,7 +94,7 @@ TEST_F(InternalConfigProviderServiceMwComTest, SetInitialQualifierState_AllEnumV
 
     auto result = InternalConfigProviderService::Create(reactor_mock_, instance_specifier);
     ASSERT_TRUE(result.has_value());
-    auto& service = result.value();
+    auto& service = *result.value();
 
     service.SetInitialQualifierState(InitialQualifierState::kDefault);
     service.SetInitialQualifierState(InitialQualifierState::kInProgress);
@@ -119,9 +119,9 @@ TEST_F(InternalConfigProviderServiceMwComTest, SendLastUpdatedParameterSetReturn
 
     auto result = InternalConfigProviderService::Create(reactor_mock_, instance_specifier);
     ASSERT_TRUE(result.has_value());
-    auto& service = result.value();
+    auto& service = *result.value();
 
-    service.StartService();
+    ASSERT_TRUE(service.Start().has_value());
 
     EXPECT_TRUE(service.SendLastUpdatedParameterSet("TestSet"));
 }
@@ -140,7 +140,7 @@ TEST_F(InternalConfigProviderServiceMwComTest, SendLastUpdatedParameterSetReturn
 
     auto result = InternalConfigProviderService::Create(reactor_mock_, instance_specifier);
     ASSERT_TRUE(result.has_value());
-    auto& service = result.value();
+    auto& service = *result.value();
 
     EXPECT_FALSE(service.SendLastUpdatedParameterSet("TestSet"));
 }

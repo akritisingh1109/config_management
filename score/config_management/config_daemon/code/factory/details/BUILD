@@ -55,8 +55,6 @@ load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER
             ],
             [
                 "//score/config_management/config_daemon/code/services/details/mw_com:details_mw_com_impl",
-                "@score_communication//score/mw/service/backend/mw_com:provided_service_builder",
-                "@score_communication//score/mw/service/backend/mw_com:provided_service_decorator",
             ],
         ),
         (
@@ -82,8 +80,6 @@ load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER
             [
                 "//score/config_management/config_daemon/code/factory:interface_for_unit_test",
                 "//score/config_management/config_daemon/code/services/details/mw_com:details_mw_com_test",
-                "@score_communication//score/mw/service/backend/mw_com:provided_service_builder",
-                "@score_communication//score/mw/service/backend/mw_com:provided_service_decorator",
             ],
         ),
     ]

@@ -34,12 +34,12 @@ class ServiceFactoryImpl final : public ServiceFactory
     ServiceFactoryImpl& operator=(ServiceFactoryImpl&&) = delete;
     ServiceFactoryImpl& operator=(const ServiceFactoryImpl&) = delete;
 
-    mw::service::ProvidedServiceContainer CreateInternalConfigProviderService(
+    mw::service::ProvidedServicesContainer CreateInternalConfigProviderService(
         const std::shared_ptr<data_model::IParameterSetCollection> read_only_parameter_data_interface) const override;
     LastUpdatedParameterSetSender CreateLastUpdatedParameterSetSender(
-        mw::service::ProvidedServiceContainer& services) override;
+        mw::service::ProvidedServicesContainer& services) override;
     InitialQualifierStateSender CreateInitialQualifierStateSender(
-        mw::service::ProvidedServiceContainer& services) override;
+        mw::service::ProvidedServicesContainer& services) override;
 };
 
 }  // namespace config_daemon

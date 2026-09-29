@@ -21,7 +21,7 @@
 
 #include "score/result/result.h"
 #include "score/mw/log/logger.h"
-#include "score/mw/service/provided_service_container.h"
+#include "score/mw/service/provided_services_container.h"
 
 #include <memory>
 #include <vector>
@@ -55,7 +55,7 @@ class ConfigDaemon final : public IConfigDaemon
     std::unique_ptr<Factory> factory_;
     std::shared_ptr<data_model::IParameterSetCollectionManager> parameterset_collection_manager_;
     std::shared_ptr<fault_event_reporter::IFaultEventReporter> fault_event_reporter_;
-    mw::service::ProvidedServiceContainer provided_services_container_;
+    mw::service::ProvidedServicesContainer provided_services_container_;
     std::vector<std::shared_ptr<IPlugin>> plugins_;
 };
 

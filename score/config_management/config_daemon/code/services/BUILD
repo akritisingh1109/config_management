@@ -30,7 +30,7 @@ cc_library(
     deps = [
         "//score/config_management/config_daemon/code/types/initial_qualifier_state",
         "@score_baselibs//score/language/futurecpp",
-        "@score_communication//score/mw/service:provided_service_container",
+        "@score_communication//score/mw/service:provided_services_container",
     ],
 )
 
