@@ -11,15 +11,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // *******************************************************************************
 
-#include "score/config_management/config_daemon/code/data_model/details/parameterset_collection_impl.h"
-#include "score/config_management/config_daemon/code/data_model/details/parameterset_collection_manager_impl.h"
-#include "score/config_management/config_daemon/code/data_model/parameter_set_storage/details/parameter_set_storage_score_impl.h"
-#include "score/config_management/config_daemon/code/factory/details/factory_impl.h"
-#include "score/config_management/config_daemon/code/fault_event_reporter/details/fault_event_reporter_score_impl.h"
-#include "score/config_management/config_daemon/code/json_helper/details/json_helper_impl.h"
-
-#include "kvsbuilder.hpp"
-#include "score/config_management/config_daemon/code/plugins/plugin_collector/details/plugin_collector_impl.h"
+#include "score/config_management/config_daemon/code/factory/details/service_factory_impl.h"
 #include "score/config_management/config_daemon/code/services/details/internal_config_provider_service_reactor_impl.h"
 #include "score/config_management/config_daemon/code/services/details/mw_com/internal_config_provider_service_impl.h"
 #include "score/mw/log/logging.h"
@@ -45,9 +37,7 @@ const auto kICPServiceInstanceSpecifierName =
         .value();
 }  // namespace
 
-Factory::Factory() : IFactory{}, json_helper_{std::make_shared<common::JsonHelper>()} {}
-
-mw::service::ProvidedServiceContainer Factory::CreateInternalConfigProviderService(
+mw::service::ProvidedServiceContainer ServiceFactoryImpl::CreateInternalConfigProviderService(
     const std::shared_ptr<data_model::IParameterSetCollection> read_only_parameter_data_interface) const
 {
     mw::service::ProvidedServiceBuilder builder{};
@@ -63,12 +53,13 @@ mw::service::ProvidedServiceContainer Factory::CreateInternalConfigProviderServi
     }
     else
     {
-        mw::log::LogError() << "Failed to create InternalConfigProviderService:" << icp_creation_result.error();
+        mw::log::LogError() << "ServiceFactoryImpl::" << __func__
+                            << ": Failed to create InternalConfigProviderService:" << icp_creation_result.error();
     }
     return builder.GetServices();
 }
 
-LastUpdatedParameterSetSender Factory::CreateLastUpdatedParameterSetSender(
+LastUpdatedParameterSetSender ServiceFactoryImpl::CreateLastUpdatedParameterSetSender(
     mw::service::ProvidedServiceContainer& services)
 {
     auto* const provided_service_container =
@@ -80,10 +71,18 @@ LastUpdatedParameterSetSender Factory::CreateLastUpdatedParameterSetSender(
             return internal_config_provider_service->SendLastUpdatedParameterSet(parameter_set_name);
         };
     }
-    return {};
+    // Not fatal: the underlying service backend may not (yet) provide a real implementation
+    // (e.g. stub-only mw::service). Return a no-op callback instead of an empty one so callers
+    // relying on a valid callback keep working.
+    mw::log::LogWarn() << "ServiceFactoryImpl::" << __func__
+                       << ": InternalConfigProviderService unavailable, using no-op callback";
+    return [](const std::string_view) noexcept -> bool {
+        return false;
+    };
 }
 
-InitialQualifierStateSender Factory::CreateInitialQualifierStateSender(mw::service::ProvidedServiceContainer& services)
+InitialQualifierStateSender ServiceFactoryImpl::CreateInitialQualifierStateSender(
+    mw::service::ProvidedServiceContainer& services)
 {
     auto* const provided_service_container =
         services.GetServices<mw::service::backend::mw_com::ProvidedServiceBuilder::DecoratorType>();
@@ -94,38 +93,10 @@ InitialQualifierStateSender Factory::CreateInitialQualifierStateSender(mw::servi
             internal_config_provider_service->SetInitialQualifierState(initial_qualifier_state);
         };
     }
-    return {};
-}
-
-std::shared_ptr<data_model::IParameterSetCollectionManager> Factory::CreateParameterSetCollectionManager(
-    std::vector<std::shared_ptr<IPlugin>>& plugins) const
-{
-    auto kvs_result = score::mw::per::kvs::KvsBuilder(score::mw::per::kvs::InstanceId{0U})
-                          .need_defaults_flag(false)
-                          .need_kvs_flag(false)
-                          .dir("/persistent/trusted/ConfigDaemon")
-                          .build();
-    if (!kvs_result.has_value())
-    {
-        mw::log::LogError() << "Factory::" << __func__ << ": Failed to open score KVS for parameter set storage";
-        return nullptr;
-    }
-    auto storage = std::make_unique<data_model::ParameterSetStorageScoreImpl>(
-        std::make_unique<score::mw::per::kvs::Kvs>(std::move(kvs_result).value()));
-
-    auto primary_collection = std::make_shared<data_model::ParameterSetCollection>();
-    return std::make_shared<data_model::ParameterSetCollectionManager>(
-        std::move(primary_collection), plugins, std::move(storage));
-}
-
-std::unique_ptr<IPluginCollector> Factory::CreatePluginCollector() const
-{
-    return std::make_unique<PluginCollector>();
-}
-
-std::shared_ptr<fault_event_reporter::IFaultEventReporter> Factory::CreateFaultEventReporter() const
-{
-    return std::make_shared<fault_event_reporter::FaultEventReporter>();
+    // Not fatal: see comment above.
+    mw::log::LogWarn() << "ServiceFactoryImpl::" << __func__
+                       << ": InternalConfigProviderService unavailable, using no-op callback";
+    return [](const config_daemon::InitialQualifierState) noexcept -> void {};
 }
 
 }  // namespace config_daemon

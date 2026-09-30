@@ -18,7 +18,10 @@ cc_library(
     ],
     features = COMPILER_WARNING_FEATURES,
     tags = ["FFI"],
-    visibility = ["//score/config_management/config_provider/code:__subpackages__"],
+    visibility = [
+        "//platform/aas/config_management/parameter_provider:__subpackages__",
+        "//score/config_management/config_provider/code:__subpackages__",
+    ],
     deps = [
         "//score/config_management/config_provider/code/parameter_set",
         "@score_baselibs//score/filesystem",
@@ -33,6 +36,7 @@ cc_library(
     ],
     features = COMPILER_WARNING_FEATURES,
     visibility = [
+        "//platform/aas/config_management/parameter_provider:__subpackages__",
         "//score/config_management/config_provider/code:__subpackages__",
     ],
     deps = [

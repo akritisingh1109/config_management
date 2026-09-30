@@ -14,15 +14,14 @@
 #include "score/config_management/config_daemon/code/data_model/details/parameterset_collection_impl.h"
 #include "score/config_management/config_daemon/code/data_model/parameterset_collection.h"
 #include "score/config_management/config_daemon/code/data_model/parameterset_collection_mock.h"
-#include "score/config_management/config_daemon/code/factory/details/factory_impl.h"
-#include "score/config_management/config_daemon/code/fault_event_reporter/details/fault_event_reporter_score_impl.h"
+#include "score/config_management/config_daemon/code/factory/details/service_factory_impl.h"
 #include "score/config_management/config_daemon/code/services/details/mw_com/internal_config_provider_service_impl.h"
 #include "score/config_management/config_daemon/code/services/internal_config_provider_service_mock.h"
 
 #include "score/mw/service/backend/mw_com/provided_service_builder.h"
 #include "score/mw/service/backend/mw_com/provided_service_decorator.h"
 
-#include "score/config_management/config_daemon/code/services/details/mw_com/generated_service/internal_config_provider_type.h"
+#include "platform/aas/config_management/lib/mw_com_types/internal_config_provider_type.h"
 #include "score/result/error.h"
 #include "score/mw/com/runtime.h"
 #include "score/mw/com/runtime_configuration.h"
@@ -45,7 +44,7 @@ namespace
 
 using ::testing::Exactly;
 
-class TestFactoryMwImpl : public ::testing::Test
+class TestServiceFactoryMwImpl : public ::testing::Test
 {
   protected:
     static void SetUpTestSuite()
@@ -56,38 +55,39 @@ class TestFactoryMwImpl : public ::testing::Test
     }
     void SetUp() override
     {
-        unit_ = std::make_unique<Factory>();
+        unit_ = std::make_unique<ServiceFactoryImpl>();
     }
 
-    std::unique_ptr<Factory> unit_;
+    std::unique_ptr<ServiceFactoryImpl> unit_;
 };
 
-TEST_F(TestFactoryMwImpl, Destruction)
+TEST_F(TestServiceFactoryMwImpl, Destruction)
 {
     RecordProperty("Priority", "3");
     RecordProperty("DerivationTechnique", "Analysis of equivalence classes and boundary values");
     RecordProperty("TestType", "Interface test");
-    RecordProperty("Verifies", "::score::config_management::config_daemon::Factory::~Factory");
-    RecordProperty("Description", "Verify that Factory instances can be destroyed safely without throwing.");
+    RecordProperty("Verifies", "::score::config_management::config_daemon::ServiceFactoryImpl::~ServiceFactoryImpl");
+    RecordProperty("Description", "Verify that ServiceFactoryImpl instances can be destroyed safely without throwing.");
 
-    std::unique_ptr<IFactory> factory_base = std::make_unique<Factory>();
+    std::unique_ptr<ServiceFactory> factory_base = std::make_unique<ServiceFactoryImpl>();
     EXPECT_NO_THROW(factory_base.reset());
 
-    auto factory_impl = std::make_unique<Factory>();
+    auto factory_impl = std::make_unique<ServiceFactoryImpl>();
     EXPECT_NO_THROW(factory_impl.reset());
 
     EXPECT_NO_THROW([]() {
-        Factory factory;
+        ServiceFactoryImpl factory;
         score::cpp::ignore = factory;
     }());
 }
 
-TEST_F(TestFactoryMwImpl, CreateInternalConfigProviderServiceSuccess)
+TEST_F(TestServiceFactoryMwImpl, CreateInternalConfigProviderServiceSuccess)
 {
     RecordProperty("Priority", "3");
     RecordProperty("DerivationTechnique", "Analysis of equivalence classes and boundary values");
     RecordProperty("TestType", "Interface test");
-    RecordProperty("Verifies", "::score::config_management::config_daemon::Factory::CreateInternalConfigProviderService()");
+    RecordProperty("Verifies",
+                   "::score::config_management::config_daemon::ServiceFactoryImpl::CreateInternalConfigProviderService()");
     RecordProperty("Description", "Ensure a valid InternalConfigProviderService is created");
 
     const auto parameter_data = std::make_shared<data_model::ParameterSetCollection>();
@@ -104,12 +104,13 @@ TEST_F(TestFactoryMwImpl, CreateInternalConfigProviderServiceSuccess)
     RecordProperty("Result", "CreateInternalConfigProviderServiceSuccess Passed");
 }
 
-TEST_F(TestFactoryMwImpl, CreateInternalConfigProviderService_InvalidParameterData)
+TEST_F(TestServiceFactoryMwImpl, CreateInternalConfigProviderService_InvalidParameterData)
 {
     RecordProperty("Priority", "3");
     RecordProperty("DerivationTechnique", "Analysis of equivalence classes and boundary values");
     RecordProperty("TestType", "Interface test");
-    RecordProperty("Verifies", "::score::config_management::config_daemon::Factory::CreateInternalConfigProviderService()");
+    RecordProperty("Verifies",
+                   "::score::config_management::config_daemon::ServiceFactoryImpl::CreateInternalConfigProviderService()");
     RecordProperty("Description",
                    "Verify that service creation succeeds, but accessing an invalid parameter set fails as expected.");
 
@@ -131,12 +132,13 @@ TEST_F(TestFactoryMwImpl, CreateInternalConfigProviderService_InvalidParameterDa
     EXPECT_FALSE(bad_param.has_value());
 }
 
-TEST_F(TestFactoryMwImpl, CreateLastUpdatedParameterSetSender)
+TEST_F(TestServiceFactoryMwImpl, CreateLastUpdatedParameterSetSender)
 {
     RecordProperty("Priority", "3");
     RecordProperty("DerivationTechnique", "Error guessing based on knowledge or experience");
     RecordProperty("TestType", "Interface test");
-    RecordProperty("Verifies", "::score::config_management::config_daemon::Factory::CreateLastUpdatedParameterSetSender()");
+    RecordProperty("Verifies",
+                   "::score::config_management::config_daemon::ServiceFactoryImpl::CreateLastUpdatedParameterSetSender()");
     RecordProperty("Description",
                    "This test ensures that CreateLastUpdatedParameterSetSender() returns a valid "
                    "LastUpdatedParameterSetSender callback");
@@ -147,39 +149,42 @@ TEST_F(TestFactoryMwImpl, CreateLastUpdatedParameterSetSender)
     mw::service::ProvidedServiceContainer mock_service_container{
         ProvidedServices{}.Add<InternalConfigProviderServiceMock>()};
 
-    auto last_updated_parameterset_sender = unit_->CreateLastUpdatedParameterSetSender(mock_service_container);
-    ASSERT_FALSE(last_updated_parameterset_sender.empty());
+    auto last_updated_parameter_set_sender = unit_->CreateLastUpdatedParameterSetSender(mock_service_container);
+    ASSERT_FALSE(last_updated_parameter_set_sender.empty());
     auto* provided_services = mock_service_container.GetServices<ProvidedServiceBuilder::DecoratorType>();
     EXPECT_CALL(
         dynamic_cast<InternalConfigProviderServiceMock&>(*provided_services->Get<IInternalConfigProviderService>()),
         SendLastUpdatedParameterSet("parameter_set_name"))
         .Times(Exactly(1));
-    std::invoke(last_updated_parameterset_sender, "parameter_set_name");
+    std::invoke(last_updated_parameter_set_sender, "parameter_set_name");
 }
 
-TEST_F(TestFactoryMwImpl, CreateLastUpdatedParameterSetSenderFail)
+TEST_F(TestServiceFactoryMwImpl, CreateLastUpdatedParameterSetSenderFail)
 {
     RecordProperty("Priority", "3");
     RecordProperty("DerivationTechnique", "Error guessing based on knowledge or experience");
     RecordProperty("TestType", "Interface test");
-    RecordProperty("Verifies", "::score::config_management::config_daemon::Factory::CreateLastUpdatedParameterSetSender()");
+    RecordProperty("Verifies",
+                   "::score::config_management::config_daemon::ServiceFactoryImpl::CreateLastUpdatedParameterSetSender()");
     RecordProperty("Description",
-                   "This test ensures that CreateLastUpdatedParameterSetSender() returns empty callback if "
-                   "ProvidedServiceContainer does not contain InternalConfigProviderService");
+                   "This test ensures that CreateLastUpdatedParameterSetSender() returns a no-op (non-empty) "
+                   "callback if ProvidedServiceContainer does not contain InternalConfigProviderService");
 
     using ProvidedServices = mw::service::backend::mw_com::ProvidedServices;
 
     mw::service::ProvidedServiceContainer mock_service_container{ProvidedServices{}};
-    auto last_updated_parameterset_sender = unit_->CreateLastUpdatedParameterSetSender(mock_service_container);
-    ASSERT_TRUE(last_updated_parameterset_sender.empty());
+    auto last_updated_parameter_set_sender = unit_->CreateLastUpdatedParameterSetSender(mock_service_container);
+    ASSERT_FALSE(last_updated_parameter_set_sender.empty());
+    EXPECT_FALSE(std::invoke(last_updated_parameter_set_sender, "parameter_set_name"));
 }
 
-TEST_F(TestFactoryMwImpl, CreateInitialQualifierStateSender)
+TEST_F(TestServiceFactoryMwImpl, CreateInitialQualifierStateSender)
 {
     RecordProperty("Priority", "3");
     RecordProperty("DerivationTechnique", "Error guessing based on knowledge or experience");
     RecordProperty("TestType", "Interface test");
-    RecordProperty("Verifies", "::score::config_management::config_daemon::Factory::CreateInitialQualifierStateSender()");
+    RecordProperty("Verifies",
+                   "::score::config_management::config_daemon::ServiceFactoryImpl::CreateInitialQualifierStateSender()");
     RecordProperty("Description",
                    "This test ensures that CreateInitialQualifierStateSender() returns a valid "
                    "InitialQualifierStateSender callback");
@@ -202,65 +207,25 @@ TEST_F(TestFactoryMwImpl, CreateInitialQualifierStateSender)
     std::invoke(initial_qualifier_state_sender, InitialQualifierState::kQualified);
 }
 
-TEST_F(TestFactoryMwImpl, CreateInitialQualifierStateSenderFail)
+TEST_F(TestServiceFactoryMwImpl, CreateInitialQualifierStateSenderFail)
 {
     RecordProperty("Priority", "3");
     RecordProperty("DerivationTechnique", "Error guessing based on knowledge or experience");
     RecordProperty("TestType", "Interface test");
-    RecordProperty("Verifies", "::score::config_management::config_daemon::Factory::CreateInitialQualifierStateSender()");
-    RecordProperty(
-        "Description",
-        "This test ensures that CreateInitialQualifierStateSender() returns empty callback if ProvidedServiceContainer"
-        "does not contain InternalConfigProviderService");
+    RecordProperty("Verifies",
+                   "::score::config_management::config_daemon::ServiceFactoryImpl::CreateInitialQualifierStateSender()");
+    RecordProperty("Description",
+                   "This test ensures that CreateInitialQualifierStateSender() returns a no-op (non-empty) callback if "
+                   "ProvidedServiceContainer does not contain InternalConfigProviderService");
 
     using ProvidedServices = mw::service::backend::mw_com::ProvidedServices;
 
     mw::service::ProvidedServiceContainer mock_service_container{ProvidedServices{}};
     auto initial_qualifier_state_sender = unit_->CreateInitialQualifierStateSender(mock_service_container);
-    ASSERT_TRUE(initial_qualifier_state_sender.empty());
+    ASSERT_FALSE(initial_qualifier_state_sender.empty());
+    std::invoke(initial_qualifier_state_sender, InitialQualifierState::kQualified);
 }
 
-TEST_F(TestFactoryMwImpl, CreateParameterSetCollectionManager)
-{
-    RecordProperty("Priority", "3");
-    RecordProperty("DerivationTechnique", "Analysis of equivalence classes and boundary values");
-    RecordProperty("TestType", "Interface test");
-    RecordProperty("Verifies", "::score::config_management::config_daemon::Factory::CreateParameterSetCollectionManager()");
-    RecordProperty("Description", "Ensure valid ParameterSetCollectionManager is created");
-
-    std::vector<std::shared_ptr<IPlugin>> plugins{};
-    const auto parameter_data = unit_->CreateParameterSetCollectionManager(plugins);
-    auto* impl = dynamic_cast<data_model::IParameterSetCollectionManager*>(parameter_data.get());
-    ASSERT_NE(nullptr, impl);
-}
-
-TEST_F(TestFactoryMwImpl, CreatePluginCollector)
-{
-    RecordProperty("Priority", "3");
-    RecordProperty("DerivationTechnique", "Analysis of equivalence classes and boundary values");
-    RecordProperty("TestType", "Interface test");
-    RecordProperty("Verifies", "::score::config_management::config_daemon::Factory::CreatePluginCollector()");
-    RecordProperty("Description", "Ensure valid PluginCollector is created");
-
-    const auto plugin_collector = unit_->CreatePluginCollector();
-    ASSERT_NE(nullptr, plugin_collector);
-}
-TEST_F(TestFactoryMwImpl, CreateFaultEventReporter)
-{
-    RecordProperty("Priority", "3");
-    RecordProperty("DerivationTechnique", "Analysis of equivalence classes and boundary values");
-    RecordProperty("TestType", "Interface test");
-    RecordProperty("Verifies", "::score::config_management::config_daemon::Factory::CreateFaultEventReporter()");
-    RecordProperty("Description",
-                   "This test ensures that CreateFaultEventReporter() returns a valid FaultEventReporter object");
-
-    // When calling CreateFaultEventReporter()
-    const auto reporter = unit_->CreateFaultEventReporter();
-
-    // Then the returned reporter instance must be valid
-    auto* proxy_impl = dynamic_cast<fault_event_reporter::FaultEventReporter*>(reporter.get());
-    ASSERT_NE(nullptr, proxy_impl) << "Factory did not return a valid FaultEventReporter object";
-}
 }  // namespace
 }  // namespace test
 }  // namespace config_daemon

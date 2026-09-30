@@ -34,16 +34,16 @@ namespace config_management
 namespace config_daemon
 {
 
-class IFactory
+class Factory
 {
   public:
-    IFactory() = default;
-    virtual ~IFactory() = default;
-    IFactory(IFactory&&) = delete;
-    IFactory(const IFactory&) = delete;
+    Factory() = default;
+    virtual ~Factory() = default;
+    Factory(Factory&&) = delete;
+    Factory(const Factory&) = delete;
 
-    IFactory& operator=(IFactory&&) = delete;
-    IFactory& operator=(const IFactory&) = delete;
+    Factory& operator=(Factory&&) = delete;
+    Factory& operator=(const Factory&) = delete;
 
     virtual mw::service::ProvidedServiceContainer CreateInternalConfigProviderService(
         const std::shared_ptr<data_model::IParameterSetCollection> read_only_parameter_data_interface) const = 0;

@@ -38,7 +38,7 @@ class ConfigDaemon final : public IConfigDaemon
   public:
     using ApplicationContext = score::mw::lifecycle::ApplicationContext;
 
-    explicit ConfigDaemon(std::unique_ptr<IFactory> factory) noexcept;
+    explicit ConfigDaemon(std::unique_ptr<Factory> factory) noexcept;
     ConfigDaemon(const ConfigDaemon&) = delete;
     ConfigDaemon(ConfigDaemon&&) = delete;
     ConfigDaemon& operator=(const ConfigDaemon&) = delete;
@@ -52,7 +52,7 @@ class ConfigDaemon final : public IConfigDaemon
     std::int32_t PreparePlugins();
 
     mw::log::Logger& logger_;
-    std::unique_ptr<IFactory> factory_;
+    std::unique_ptr<Factory> factory_;
     std::shared_ptr<data_model::IParameterSetCollectionManager> parameterset_collection_manager_;
     std::shared_ptr<fault_event_reporter::IFaultEventReporter> fault_event_reporter_;
     mw::service::ProvidedServiceContainer provided_services_container_;

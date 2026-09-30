@@ -25,7 +25,7 @@ namespace config_management
 namespace config_daemon
 {
 
-class FactoryMock final : public IFactory
+class FactoryMock final : public Factory
 {
   public:
     FactoryMock();

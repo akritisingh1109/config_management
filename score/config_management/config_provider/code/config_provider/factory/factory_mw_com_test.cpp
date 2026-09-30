@@ -12,7 +12,7 @@
 // *******************************************************************************
 #include "score/config_management/config_provider/code/config_provider/factory/factory_mw_com.h"
 #include "score/config_management/config_provider/code/persistency/persistency_mock.h"
-#include "score/config_management/config_provider/code/proxies/details/mw_com/generated_service/internal_config_provider_type.h"
+#include "platform/aas/config_management/lib/mw_com_types/internal_config_provider_type.h"
 
 #include "score/json/json_parser.h"
 
@@ -20,6 +20,11 @@
 #include "score/mw/com/runtime_configuration.h"
 
 #include <gtest/gtest.h>
+
+#include <cstdio>
+#include <filesystem>
+#include <fstream>
+#include <system_error>
 
 namespace score
 {
@@ -39,7 +44,7 @@ struct DummyPort
 };
 
 const std::string kICPSpecifier{"ConfigDaemonCustomer/ConfigDaemonCustomer_RootSwc/InternalConfigProviderAppRPort"};
-using MwComSkeleton = score::config_management::config_daemon::InternalConfigProviderSkeleton;
+using MwComSkeleton = score::mw::com::AsSkeleton<score::config_management::config_daemon::InternalConfigProviderInterface>;
 using MwComInitialQualifierStateType = score::config_management::config_daemon::mw_com_icp_types::InitialQualifierState;
 
 class ConfigProviderFactoryTest : public ::testing::Test
@@ -47,8 +52,27 @@ class ConfigProviderFactoryTest : public ::testing::Test
   public:
     void SetUp() override
     {
+        // ConfigProviderFactory::Create() now looks up the theoretical worst-case parameter set buffer size from
+        // buffer_size_report.json (deployed alongside the other ConfigDaemon config files in production, see
+        // //ecu/xpad/xpad-shared/config/ipnext/isoc/config_management/config_daemon:buffer_size_report). This test
+        // provides a minimal fixture at that fixed path. Writing there requires the same filesystem permissions as
+        // production (qtsafefs on target, root elsewhere); skip rather than fail where those aren't available (e.g.
+        // a developer's local sandbox).
+        buffer_size_report_path = std::string{kDefaultBufferSizeReportPath};
+        std::error_code error_code;
+        std::filesystem::create_directories(std::filesystem::path{buffer_size_report_path}.parent_path(), error_code);
+        if (error_code)
+        {
+            GTEST_SKIP() << "Cannot create " << std::filesystem::path{buffer_size_report_path}.parent_path() << ": "
+                         << error_code.message();
+        }
+        std::ofstream buffer_size_report_file{buffer_size_report_path};
+        buffer_size_report_file << R"({"buffer_size_mapping": {"DummyParameterSet": 16425}})";
+        buffer_size_report_file.close();
+
         score::mw::com::runtime::RuntimeConfiguration runtime_configuration{
-            "./score/config_management/config_provider/code/config_provider/factory/mw_com_config.json"};
+            "./score/config_management/config_provider/code/proxies/details/mw_com/"
+            "test_mw_com_config.json"};
         score::mw::com::runtime::InitializeRuntime(runtime_configuration);
 
         skeleton = CreateService();
@@ -65,15 +89,25 @@ class ConfigProviderFactoryTest : public ::testing::Test
         auto service_result = MwComSkeleton::Create(std::move(instance_specifier_result).value());
         // ASSERT_TRUE(service_result.has_value());
         auto& service = service_result.value();
+        // The generated skeleton requires every declared method to have a registered handler before
+        // OfferService() is called, otherwise SkeletonBase::VerifyAllMethodsRegistered() silently fails
+        // with a generic kBindingFailure. This test does not exercise get_parameter_set() itself, so a
+        // minimal handler that never resolves anything is sufficient to satisfy that precondition.
+        auto handler = [](score::config_management::config_daemon::mw_com_icp_types::ParameterSetContent&,
+                          const score::config_management::config_daemon::mw_com_icp_types::ParameterSetName&,
+                          const std::size_t&) {};
+        std::ignore = service.get_parameter_set.RegisterHandler(std::move(handler));
         return std::make_unique<MwComSkeleton>(std::move(service));
     }
 
     void TearDown() override
     {
         // AraProxy::DestroyFindProxy();
+        std::remove(buffer_size_report_path.c_str());
     }
 
     std::unique_ptr<MwComSkeleton> skeleton;
+    std::string buffer_size_report_path;
 };
 
 TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_DefaultPolling_NoPersistency)

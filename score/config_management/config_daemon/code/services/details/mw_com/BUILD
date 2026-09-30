@@ -15,9 +15,9 @@ load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER
         tags = ["FUSA"],
         visibility = ["//score/config_management/config_daemon/code:__subpackages__"],
         deps = [
+            "//platform/aas/config_management/lib/mw_com_types:internal_config_provider_type",
             "//score/config_management/config_daemon/code/data_model/error",
             "//score/config_management/config_daemon/code/services",
-            "//score/config_management/config_daemon/code/services/details/mw_com/generated_service:internal_config_provider_type",
             "@score_logging//score/mw/log",
         ] + dep,
     )
@@ -49,7 +49,6 @@ filegroup(
     visibility = [
         "//score/config_management/config_daemon/code:__subpackages__",
         "//score/config_management/config_daemon/test:__subpackages__",
-        "//visibility:public",
     ],
 )
 

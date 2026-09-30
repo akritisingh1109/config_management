@@ -23,6 +23,8 @@ load(":custom.bzl", "load_custom_test_suites")
         srcs = [],
         hdrs = [
             "factory.h",
+            "infrastructure_factory.h",
+            "service_factory.h",
         ],
         features = COMPILER_WARNING_FEATURES,
         tags = ["FFI"],
@@ -77,6 +79,8 @@ cc_unit_test_suites_for_host_and_qnx(
     name = "unit_tests",
     cc_unit_tests = [
         "//score/config_management/config_daemon/code/factory/details:unit_test_mw_com",
+        "//score/config_management/config_daemon/code/factory/details:unit_test_infrastructure_factory_score",
+        "//score/config_management/config_daemon/code/factory/details:unit_test_factory_impl",
     ] + load_custom_test_suites(),
     visibility = ["//score/config_management/config_daemon:__subpackages__"],
 )
