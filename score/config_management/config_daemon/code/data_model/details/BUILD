@@ -34,6 +34,7 @@ cc_library(
         "//score/config_management/config_daemon/code:__subpackages__",
     ],
     deps = [
+        "//platform/aas/config_management/lib/parameter_set_json_serializer/details:parameter_set_json_serializer_impl",
         "//score/config_management/config_daemon/code/data_model:parameter_set_qualifier",
         "//score/config_management/config_daemon/code/data_model:parameterset_collection",
         "//score/config_management/config_daemon/code/data_model/error",

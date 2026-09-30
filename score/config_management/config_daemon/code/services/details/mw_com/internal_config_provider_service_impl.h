@@ -15,9 +15,9 @@
 #define SCORE_CONFIG_MANAGEMENT_CONFIG_DAEMON_CODE_SERVICES_DETAILS_MW_COM_INTERNAL_CONFIG_PROVIDER_SERVICE_IMPL_H
 
 #include "score/config_management/config_daemon/code/data_model/parameterset_collection_interfaces/read_only_parameterset_collection.h"
-#include "score/config_management/config_daemon/code/services/details/mw_com/generated_service/internal_config_provider_type.h"
 #include "score/config_management/config_daemon/code/services/internal_config_provider_service.h"
 #include "score/config_management/config_daemon/code/services/internal_config_provider_service_reactor.h"
+#include "platform/aas/config_management/lib/mw_com_types/internal_config_provider_type.h"
 #include "score/mw/log/logger.h"
 #include <score/string_view.hpp>
 #include <memory>
@@ -28,6 +28,8 @@ namespace config_management
 {
 namespace config_daemon
 {
+
+using InternalConfigProviderSkeleton = score::mw::com::AsSkeleton<InternalConfigProviderInterface>;
 
 class InternalConfigProviderService final : public IInternalConfigProviderService
 {

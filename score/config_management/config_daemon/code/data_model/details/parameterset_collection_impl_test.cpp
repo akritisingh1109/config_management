@@ -91,28 +91,8 @@ const std::string kByteArrayValue = R"({
     "list" : [ 1, 2, 3, 4, 5 ]
 })";
 
-score::cpp::pmr::string gExpectedParameterSet = R"({
-    "parameters": {
-        "test_parameter_name_byte_array": [
-            1,
-            2,
-            3,
-            4,
-            5
-        ],
-        "test_parameter_name_double": 1.7976931348623157e+308,
-        "test_parameter_name_float": 3.40282347e+38,
-        "test_parameter_name_int16": -32768,
-        "test_parameter_name_int32": -2147483648,
-        "test_parameter_name_int64": -9223372036854775808,
-        "test_parameter_name_int8": -128,
-        "test_parameter_name_uint16": 65535,
-        "test_parameter_name_uint32": 4294967295,
-        "test_parameter_name_uint64": 18446744073709551615,
-        "test_parameter_name_uint8": 255
-    },
-    "qualifier": 0
-})";
+score::cpp::pmr::string gExpectedParameterSet =
+    R"({"parameters":{"test_parameter_name_byte_array":[1,2,3,4,5],"test_parameter_name_double":1.7976931348623157e+308,"test_parameter_name_float":3.4028234663852886e+38,"test_parameter_name_int16":-32768,"test_parameter_name_int32":-2147483648,"test_parameter_name_int64":-9223372036854775808,"test_parameter_name_int8":-128,"test_parameter_name_uint16":65535,"test_parameter_name_uint32":4294967295,"test_parameter_name_uint64":18446744073709551615,"test_parameter_name_uint8":255},"qualifier":0})";
 
 TEST_F(ParameterSetCollectionFixture, ParameterSetCollectionComplexTest)
 {
@@ -156,7 +136,11 @@ TEST_F(ParameterSetCollectionFixture, ParameterSetCollectionComplexTest)
             EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameInt8, json::Any{INT8_MIN}).has_value());
         });
         std::thread thread_4([&]() noexcept {
-            EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameFloat, json::Any{FLT_MAX}).has_value());
+            // ParameterSetJsonSerializer only supports json::Number values produced by parsing JSON (which the
+            // score::json parser always represents as 'double', never as 'float'), so insert a double here rather
+            // than a raw 'float' (json::Any{FLT_MAX} would violate that precondition and isn't safely serializable).
+            EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameFloat, json::Any{static_cast<double>(FLT_MAX)})
+                            .has_value());
             EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameDouble, json::Any{DBL_MAX}).has_value());
         });
 
@@ -268,16 +252,7 @@ TEST_F(ParameterSetCollectionFixture, UpdateParameterSucceed)
     RecordProperty("Description",
                    "Verifies that UpdateParameterSet method will update the parameter set without an error and "
                    "GetParameterSet will return an updated value");
-    score::cpp::pmr::string expected_string_value = R"({
-    "parameters": {
-        "parameter_name": [
-            3,
-            4,
-            5
-        ]
-    },
-    "qualifier": 0
-})";
+    score::cpp::pmr::string expected_string_value = R"({"parameters":{"parameter_name":[3,4,5]},"qualifier":0})";
     std::string valid_set_object = R"({
         "parameter_name" : [3,4,5]
     })";
@@ -359,16 +334,7 @@ TEST_F(ParameterSetCollectionFixture, UpdateParameterShallFailForUnCalibratableP
         "Description",
         "Sets the target parameter set to non-calibratable, attempts an update with valid input, expects the update "
         "to fail with kParameterSetNotCalibratable, and verifies the parameter set remains unchanged.");
-    score::cpp::pmr::string expected_string_value = R"({
-    "parameters": {
-        "parameter_name": [
-            1,
-            2,
-            3
-        ]
-    },
-    "qualifier": 0
-})";
+    score::cpp::pmr::string expected_string_value = R"({"parameters":{"parameter_name":[1,2,3]},"qualifier":0})";
 
     std::string valid_set_object = R"({
         "parameter_name" : [3,4,5]
@@ -432,29 +398,10 @@ TEST_F(ParameterSetCollectionFixture, UpdateParameterSucceedInMultiThreadingUse)
 
     constexpr int kIterations = 1000;
 
-    score::cpp::pmr::string expected_string_value_by_thread1 = R"({
-    "parameters": {
-        "parameter_name": [
-            9,
-            10,
-            11,
-            12
-        ]
-    },
-    "qualifier": 0
-})";
+    score::cpp::pmr::string expected_string_value_by_thread1 =
+        R"({"parameters":{"parameter_name":[9,10,11,12]},"qualifier":0})";
 
-    score::cpp::pmr::string expected_string_value_by_thread2 = R"({
-    "parameters": {
-        "parameter_name": [
-            5,
-            6,
-            7,
-            8
-        ]
-    },
-    "qualifier": 0
-})";
+    score::cpp::pmr::string expected_string_value_by_thread2 = R"({"parameters":{"parameter_name":[5,6,7,8]},"qualifier":0})";
 
     pthread_barrier_t start_barrier;
     ASSERT_EQ(pthread_barrier_init(&start_barrier, nullptr, 2), 0);

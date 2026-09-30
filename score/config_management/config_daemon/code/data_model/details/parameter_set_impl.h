@@ -16,8 +16,8 @@
 
 #include "score/config_management/config_daemon/code/data_model/details/parameter_impl.h"
 #include "score/config_management/config_daemon/code/data_model/parameter_set_qualifier.h"
+#include "platform/aas/config_management/lib/parameter_set_json_serializer/parameter_set_json_serializer.h"
 
-#include "score/json/i_json_writer.h"
 #include "score/json/internal/model/any.h"
 #include "score/mw/log/logger.h"
 
@@ -25,6 +25,7 @@
 #include <score/string.hpp>
 #include <score/string_view.hpp>
 
+#include <memory>
 #include <mutex>
 #include <unordered_map>
 
@@ -40,7 +41,7 @@ namespace data_model
 class ParameterSet final
 {
   public:
-    explicit ParameterSet(std::unique_ptr<json::IJsonWriter> json_writer);
+    ParameterSet();
 
     ~ParameterSet() = default;
     ParameterSet(ParameterSet&&) = delete;
@@ -61,7 +62,7 @@ class ParameterSet final
   private:
     mw::log::Logger& logger_;
     std::unordered_map<score::cpp::pmr::string, Parameter> data_;
-    std::unique_ptr<json::IJsonWriter> json_writer_;
+    std::unique_ptr<score::platform::config_management::ParameterSetJsonSerializer> json_serializer_;
     score::config_management::config_daemon::ParameterSetQualifier qualifier_;
     bool is_calibratable_;
 };

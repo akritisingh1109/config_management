@@ -12,7 +12,7 @@
           "serviceId": 3101,
           "events": [
             {
-              "eventName": "last_updated_parameterset",
+              "eventName": "last_updated_parameter_set",
               "eventId": 1
             }
           ],
@@ -24,7 +24,7 @@
           ],
           "methods":[
             {
-              "methodName": "get_parameterset",
+              "methodName": "get_parameter_set",
               "methodId": 3
             }
           ]
@@ -47,7 +47,7 @@
           "binding": "SHM",
           "events": [
             {
-              "eventName": "last_updated_parameterset",
+              "eventName": "last_updated_parameter_set",
               "eventId": 1,
               "maxSamples": 2,
               "maxSubscribers": 1
@@ -62,7 +62,7 @@
           ],
           "methods": [
             {
-              "methodName": "get_parameterset",
+              "methodName": "get_parameter_set",
               "queueSize": 1
             }
           ]

@@ -1,6 +1,5 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@score_baselibs//:bazel/unit_tests.bzl", "cc_unit_test_suites_for_host_and_qnx")
-load("@score_baselibs//score/quality/clang_tidy:extra_checks.bzl", "clang_tidy_extra_checks")
 
 alias(
     name = "config_provider_interface",
@@ -19,7 +18,7 @@ cc_library(
     tags = ["FUSA"],
     visibility = ["//visibility:public"],
     deps = select({
-        "//score/config_management/config_daemon/code:is_score_variant": [],
+        "//platform/aas/config_management/flags:is_mw_com": [],
         "//conditions:default": ["//score/config_management/config_provider/code/config_provider/factory:factory_socal_r20_11"],
     }),
 )
@@ -31,10 +30,23 @@ cc_library(
     deps = ["//score/config_management/config_provider/code/config_provider/factory:factory_mw_com"],
 )
 
+cc_library(
+    name = "config_provider_socal_r20_11",
+    tags = ["FUSA"],
+    visibility = ["//score/config_management/config_provider:__subpackages__"],
+    deps = ["//score/config_management/config_provider/code/config_provider/factory:factory_socal_r20_11"],
+)
+
+alias(
+    name = "config_provider_socal_r20_11_for_unit_test",
+    actual = "//score/config_management/config_provider/code/config_provider/factory:factory_socal_r20_11_for_unit_tests",
+    visibility = ["//score/config_management/config_provider:__subpackages__"],
+)
+
 alias(
     name = "config_provider_factory_for_unit_test",
     actual = select({
-        "//score/config_management/config_daemon/code:is_score_variant": "//score/config_management/config_provider/code/config_provider/factory:factory_mw_com",
+        "//platform/aas/config_management/flags:is_mw_com": "//score/config_management/config_provider/code/config_provider/factory:factory_mw_com",
         "//conditions:default": "//score/config_management/config_provider/code/config_provider/factory:factory_socal_r20_11_for_unit_tests",
     }),
     visibility = ["//visibility:public"],
@@ -51,13 +63,14 @@ cc_unit_test_suites_for_host_and_qnx(
     visibility = ["//score/config_management:__pkg__"],
 )
 
-clang_tidy_extra_checks(
-    name = "clang_tidy_extra_checks",
-    extra_features = [
-        "spp_code_style_check_header_guards",
-        "spp_code_style_check_method_names",
-        "spp_code_style_check_readability",
-        "spp_code_style_check_variable_names",
-        "spp_code_style_check_type_names",
-    ],
+test_suite(
+    name = "component_tests",
+    tests = [],
+    visibility = ["//score/config_management:__pkg__"],
+)
+
+alias(
+    name = "mock_ecu_blackbox",
+    actual = "//score/config_management/config_provider/test/ipnext_com_mock/adaptive_model/machine/mpad_pp",
+    visibility = ["//score/config_management:__subpackages__"],
 )

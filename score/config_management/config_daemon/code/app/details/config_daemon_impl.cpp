@@ -11,10 +11,10 @@
 // SPDX-License-Identifier: Apache-2.0
 // *******************************************************************************
 #include "score/config_management/config_daemon/code/app/details/config_daemon_impl.h"
-#include "score/concurrency/interruptible_wait.h"
-#include "score/filesystem/error.h"
 #include "score/json/json_parser.h"
 #include "score/os/stat.h"
+#include "score/concurrency/interruptible_wait.h"
+#include "score/filesystem/error.h"
 #include "score/scope_exit/scope_exit.h"
 
 #include <score/utility.hpp>
@@ -33,7 +33,7 @@ constexpr const std::int32_t kExitCodeFailure{1};
 
 }  // namespace
 
-ConfigDaemon::ConfigDaemon(std::unique_ptr<IFactory> factory) noexcept
+ConfigDaemon::ConfigDaemon(std::unique_ptr<Factory> factory) noexcept
     : IConfigDaemon{},
       logger_{mw::log::CreateLogger(std::string_view{"App"})},
       factory_{std::move(factory)},

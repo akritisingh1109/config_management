@@ -33,11 +33,11 @@ class JsonHelperMock final : public IJsonHelper
     MOCK_METHOD(std::shared_ptr<json::IJsonParser>, GetJsonParser, (), (const, noexcept, override));
     MOCK_METHOD(std::shared_ptr<json::IJsonWriter>, GetJsonWriter, (), (const, noexcept, override));
     MOCK_METHOD(std::shared_ptr<json::IJsonWriter>, GetJsonSyncedWriter, (), (const, noexcept, override));
-    MOCK_METHOD(std::shared_ptr<filesystem::IStandardFilesystem>,
+    MOCK_METHOD(std::shared_ptr<score::filesystem::IStandardFilesystem>,
                 GetStandardFilesystem,
                 (),
                 (const, noexcept, override));
-    MOCK_METHOD(std::shared_ptr<filesystem::IFileFactory>, GetFileFactory, (), (const, noexcept, override));
+    MOCK_METHOD(std::shared_ptr<score::filesystem::IFileFactory>, GetFileFactory, (), (const, noexcept, override));
 };
 
 }  // namespace common
