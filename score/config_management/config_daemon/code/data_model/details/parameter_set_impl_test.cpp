@@ -76,6 +76,22 @@ TEST_F(ParameterSetFixture, GetParameterSetAsString_Pass)
     EXPECT_STREQ(parameter_set->GetParameterSetAsString().value().c_str(), expected);
 }
 
+TEST_F(ParameterSetFixture, GetParameterSetAsString_ContainsQualifier)
+{
+    RecordProperty("Priority", "3");
+    RecordProperty("DerivationTechnique", "Analysis of equivalence classes and boundary values");
+    RecordProperty("TestType", "Interface test");
+    RecordProperty("Verifies", "::score::config_management::config_daemon::data_model::ParameterSet::GetParameterSetAsString");
+    RecordProperty("Description",
+                   "Verifies that GetParameterSetAsString emits the numeric underlying value of the currently set qualifier.");
+
+    parameter_set->SetQualifier(ParameterSetQualifier::kQualifying);
+
+    const auto* const expected = R"({"parameters":{"bar":69420,"foo":42},"qualifier":4})";
+
+    EXPECT_STREQ(parameter_set->GetParameterSetAsString().value().c_str(), expected);
+}
+
 TEST_F(ParameterSetFixture, Add_NoUpdateToExistingValue)
 {
     RecordProperty("Priority", "3");

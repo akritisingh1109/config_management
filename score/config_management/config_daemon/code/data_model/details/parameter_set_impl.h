@@ -60,6 +60,8 @@ class ParameterSet final
     Result<json::Any> GetParameter(const score::cpp::string_view parameter_name);
 
   private:
+    json::Object GetParametersAsJson() const;
+
     mw::log::Logger& logger_;
     std::unordered_map<score::cpp::pmr::string, Parameter> data_;
     std::unique_ptr<score::platform::config_management::ParameterSetJsonSerializer> json_serializer_;

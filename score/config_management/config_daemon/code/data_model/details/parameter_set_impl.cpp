@@ -96,7 +96,7 @@ Result<void> ParameterSet::Update(json::Object&& parameters)
 
 Result<score::cpp::pmr::string> ParameterSet::GetParameterSetAsString() const
 {
-    return json_serializer_->Serialize(GetParameterSetAsJson());
+    return json_serializer_->SerializeParameterSet(GetParametersAsJson(), score::cpp::to_underlying(qualifier_));
 }
 
 Result<json::Any> ParameterSet::GetParameter(const score::cpp::string_view parameter_name)
@@ -114,15 +114,20 @@ Result<json::Any> ParameterSet::GetParameter(const score::cpp::string_view param
     }
 }
 
-json::Object ParameterSet::GetParameterSetAsJson() const
+json::Object ParameterSet::GetParametersAsJson() const
 {
-    json::Object parameter_set;
     json::Object parameters;
     for (const auto& parameter : data_)
     {
         parameters[parameter.first.c_str()] = parameter.second.GetValue().CloneByValue();
     }
-    parameter_set["parameters"] = std::move(parameters);
+    return parameters;
+}
+
+json::Object ParameterSet::GetParameterSetAsJson() const
+{
+    json::Object parameter_set;
+    parameter_set["parameters"] = GetParametersAsJson();
     json::Any qualifier{score::cpp::to_underlying(qualifier_)};
     parameter_set["qualifier"] = std::move(qualifier);
 
