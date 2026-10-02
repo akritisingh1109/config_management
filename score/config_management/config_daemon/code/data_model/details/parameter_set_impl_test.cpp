@@ -82,8 +82,9 @@ TEST_F(ParameterSetFixture, GetParameterSetAsString_ContainsQualifier)
     RecordProperty("DerivationTechnique", "Analysis of equivalence classes and boundary values");
     RecordProperty("TestType", "Interface test");
     RecordProperty("Verifies", "::score::config_management::config_daemon::data_model::ParameterSet::GetParameterSetAsString");
-    RecordProperty("Description",
-                   "Verifies that GetParameterSetAsString emits the numeric underlying value of the currently set qualifier.");
+    RecordProperty(
+        "Description",
+        "Verifies that GetParameterSetAsString emits the numeric underlying value of the currently set qualifier.");
 
     parameter_set->SetQualifier(ParameterSetQualifier::kQualifying);
 
