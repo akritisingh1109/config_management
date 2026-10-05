@@ -29,13 +29,15 @@ enum class ParameterSetQualifier : std::uint8_t
     kQualified,
     kDefault,
     kModified,
-    kQualifying
+    kQualifying  // Must remain the enumerator with the highest value, see the static_assert below.
 };
 
-// BUD-02 of the Parameter Set JSON Format Contract budgets the qualifier with 3 octets, i.e. for std::uint8_t.
-// Changing the underlying type requires adapting the contract and the buffer_size_calculator.
-static_assert(std::is_same_v<std::underlying_type_t<ParameterSetQualifier>, std::uint8_t>,
-              "ParameterSetQualifier's underlying type must be std::uint8_t (see BUD-02 of the "
+// BUD-02 of the Parameter Set JSON Format Contract budgets the qualifier with 1 octet, i.e. its numeric underlying
+// value is always a single decimal digit (0..9). kQualifying is the enumerator with the highest value, so asserting
+// on it covers all enumerators. Adding an enumerator beyond 9 requires adapting the contract (BUD-02),
+// QUALIFIER_WORST_CASE_LENGTH of the buffer_size_calculator and ParameterSetJsonSerializerImpl::SerializeParameterSet.
+static_assert(static_cast<std::underlying_type_t<ParameterSetQualifier>>(ParameterSetQualifier::kQualifying) <= 9U,
+              "ParameterSetQualifier values must be single decimal digits (see BUD-02 of the "
               "Parameter Set JSON Format Contract)");
 
 }  // namespace config_daemon
