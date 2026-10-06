@@ -20,6 +20,7 @@ cc_library(
         "//score/config_management/config_provider/code/proxies:internal_config_provider",
         "@score_baselibs//score/concurrency:condition_variable",
         "@score_baselibs//score/concurrency/future",
+        "@score_baselibs//score/json:json_parser",
         "@score_baselibs//score/language/futurecpp",
         "@score_communication//score/mw/service:proxy_data",
         "@score_logging//score/mw/log",
@@ -46,6 +47,7 @@ cc_test(
         "@score_baselibs//score/concurrency:interruptible_wait",
         "@score_baselibs//score/concurrency:notification",
         "@score_baselibs//score/concurrency/future",
+        "@score_baselibs//score/json:json_parser",
         "@score_baselibs//score/mw/log:recorder_mock",
     ],
 )

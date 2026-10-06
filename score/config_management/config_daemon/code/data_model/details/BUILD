@@ -41,6 +41,7 @@ cc_library(
         "//score/config_management/config_daemon/code/data_model/parameter_set_storage",
         "@score_baselibs//score/filesystem",
         "@score_baselibs//score/json",
+        "@score_baselibs//score/json:json_parser",
         "@score_baselibs//score/language/futurecpp",
         "@score_logging//score/mw/log",
     ],
@@ -77,6 +78,7 @@ cc_test(
     deps = [
         ":parameterset_collection_impl",
         "@googletest//:gtest_main",
+        "@score_baselibs//score/json:json_parser",
         "@score_baselibs//score/json:mock",
     ],
 )
