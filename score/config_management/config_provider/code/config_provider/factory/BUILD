@@ -33,7 +33,6 @@ cc_library(
         "//score/config_management/config_provider/code/config_provider/error",
         "//score/config_management/lib/mw_com_types:internal_config_provider_type",
         "@score_baselibs//score/json",
-        "@score_baselibs//score/json:json_parser",
         "@score_baselibs//score/language/futurecpp",
         "@score_baselibs//score/result",
         "@score_logging//score/mw/log",
@@ -70,7 +69,6 @@ cc_library(
         "//score/config_management/config_provider/code/persistency/details",
         "//score/config_management/config_provider/code/proxies/details:details_mw_com",
         "@score_baselibs//score/json",
-        "@score_baselibs//score/json:json_parser",
         "@score_communication//score/mw/service:factory",
         "@score_communication//score/mw/service/backend/mw_com:single_instantiation_strategy",
         "@score_logging//score/mw/log",
@@ -95,7 +93,7 @@ cc_test(
         "//score/config_management/config_provider/code/proxies:internal_config_provider",
         "//score/config_management/config_provider/code/proxies:mock",
         "@googletest//:gtest_main",
-        "@score_baselibs//score/json:json_parser",
+        "@score_baselibs//score/json",
     ],
 )
 

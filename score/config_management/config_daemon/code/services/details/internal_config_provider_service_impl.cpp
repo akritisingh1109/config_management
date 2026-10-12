@@ -108,7 +108,7 @@ score::Result<std::unique_ptr<InternalConfigProviderService>> InternalConfigProv
         internal_config_provider_service_reactor, std::move(icp_skeleton_result).value()}};
 }
 
-Result<void> InternalConfigProviderService::Start()
+score::Result<void> InternalConfigProviderService::Start()
 {
     mw::log::LogDebug() << "InternalConfigProviderService::" << __func__;
     auto handler = [this](score::config_management::config_daemon::mw_com_icp_types::ParameterSetContent& result,

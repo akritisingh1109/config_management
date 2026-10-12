@@ -21,9 +21,9 @@
 #include "score/mw/service/provided_services_container.h"
 
 #include "score/config_management/lib/mw_com_types/internal_config_provider_type.h"
-#include "score/result/error.h"
 #include "score/mw/com/runtime.h"
 #include "score/mw/com/runtime_configuration.h"
+#include "score/result/error.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 

@@ -18,7 +18,6 @@ cc_library(
         "@score_baselibs//score/concurrency:condition_variable",
         "@score_baselibs//score/concurrency/future",
         "@score_baselibs//score/json",
-        "@score_baselibs//score/json:json_parser",
         "@score_logging//score/mw/log",
     ],
 )

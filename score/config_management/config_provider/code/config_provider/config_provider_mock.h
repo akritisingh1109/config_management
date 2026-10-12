@@ -35,11 +35,11 @@ class ConfigProviderMock final : public ConfigProvider
     ConfigProviderMock();
     ~ConfigProviderMock() noexcept override = default;
 
-    MOCK_METHOD(Result<std::shared_ptr<const ParameterSet>>,
+    MOCK_METHOD(score::Result<std::shared_ptr<const ParameterSet>>,
                 GetParameterSet,
                 (const std::string_view set_name),
                 (override));
-    MOCK_METHOD(Result<std::shared_ptr<const ParameterSet>>,
+    MOCK_METHOD(score::Result<std::shared_ptr<const ParameterSet>>,
                 GetParameterSet,
                 (const std::string_view set_name, const std::optional<std::chrono::milliseconds> timeout),
                 (override));
@@ -48,11 +48,11 @@ class ConfigProviderMock final : public ConfigProvider
                 (const score::cpp::pmr::vector<std::string_view>& set_names,
                  const std::optional<std::chrono::milliseconds> timeout),
                 (override));
-    MOCK_METHOD(Result<void>,
+    MOCK_METHOD(score::Result<void>,
                 OnChangedParameterSet,
                 (const std::string& set_name, OnChangedParameterSetCallback&& callback),
                 (noexcept, override));
-    MOCK_METHOD(Result<void>,
+    MOCK_METHOD(score::Result<void>,
                 OnChangedParameterSetCbk,
                 (std::string_view set_name, OnChangedParameterSetCallback&& callback),
                 (noexcept, override));
@@ -60,7 +60,7 @@ class ConfigProviderMock final : public ConfigProvider
                 GetInitialQualifierState,
                 (const std::optional<std::chrono::milliseconds> timeout),
                 (noexcept, override));
-    MOCK_METHOD(Result<void>, CheckParameterSetUpdates, (), (const, noexcept, override));
+    MOCK_METHOD(score::Result<void>, CheckParameterSetUpdates, (), (const, noexcept, override));
     MOCK_METHOD(bool,
                 WaitUntilConnected,
                 (const std::chrono::milliseconds, const score::cpp::stop_token&),

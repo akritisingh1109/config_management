@@ -96,10 +96,10 @@ cc_test(
         (
             "_impl",
             [
-                "@score_baselibs//score/result",
-                "@score_communication//score/mw/com",
                 "//score/config_management/config_daemon/code/services:internal_config_provider_reactor",
                 "//score/config_management/config_daemon/code/data_model/parameterset_collection_interfaces:read_only_parameterset_collection",
+                "@score_baselibs//score/result",
+                "@score_communication//score/mw/com",
             ],
             False,
         ),

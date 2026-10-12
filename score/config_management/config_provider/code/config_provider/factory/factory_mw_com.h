@@ -20,13 +20,14 @@
 #include "score/config_management/config_provider/code/proxies/details/internal_config_provider_impl.h"
 #include "score/config_management/lib/mw_com_types/internal_config_provider_type.h"
 
-#include "score/json/json_parser.h"
 #include "score/mw/log/logger.h"
 #include "score/mw/service/backend/mw_com/single_instantiation_strategy.h"
 #include "score/mw/service/proxy_needs.h"
 #include "score/mw/service/proxy_needs_factory.h"
 
+#include "score/json/json_parser.h"
 #include <score/callback.hpp>
+
 #include <score/memory.hpp>
 #include <score/memory_resource.hpp>
 #include <score/optional.hpp>
@@ -285,10 +286,11 @@ class ConfigProviderFactory final
         // last_updated_parameter_set EVENT for calibration sets, not the semi-dynamic get_parameter_set METHOD,
         // whose coding parameter set names routinely exceed it - so this must be computed from
         // buffer_size_report.json rather than a fixed constant.
-        const auto shm_sizing_result = BufferSizeReport::GetMaxBufferSizeInfo(initial_parameter_set_name_list,
-                                                                              memory_resource,
-                                                                              std::make_shared<json::JsonParser>(),
-                                                                              buffer_size_report_path);
+        const auto shm_sizing_result =
+            BufferSizeReport::GetMaxBufferSizeInfo(initial_parameter_set_name_list,
+                                                   memory_resource,
+                                                   std::make_shared<score::json::JsonParser>(),
+                                                   buffer_size_report_path);
         // Falling back to conservative default sizes (rather than returning nullptr) keeps ConfigProvider usable
         // even if buffer_size_report.json is missing or malformed. kMinParameterSetContentBufferSize is a true
         // floor - always big enough for the skeleton's sentinel content - but there is no equivalent bound for

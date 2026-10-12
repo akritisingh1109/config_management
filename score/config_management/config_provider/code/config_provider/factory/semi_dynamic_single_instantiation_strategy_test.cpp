@@ -13,12 +13,13 @@
 
 #include "score/config_management/config_provider/code/config_provider/factory/semi_dynamic_single_instantiation_strategy.h"
 
-#include "score/result/result.h"
 #include "score/mw/service/proxy_builder_base.h"
 #include "score/mw/service/single_instance_holder.h"
+
 #include "score/concurrency/future/interruptible_promise.h"
 #include "score/mw/com/com_error_domain.h"
 #include "score/mw/com/types.h"
+#include "score/result/result.h"
 
 #include <score/assert.hpp>
 #include <score/callback.hpp>

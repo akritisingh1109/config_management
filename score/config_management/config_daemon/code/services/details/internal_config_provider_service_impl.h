@@ -43,7 +43,7 @@ class InternalConfigProviderService final : public IInternalConfigProviderServic
     void SetInitialQualifierState(const config_daemon::InitialQualifierState initial_qualifier_state) noexcept override;
     bool SendLastUpdatedParameterSet(const std::string_view parameter_set_name) noexcept override;
 
-    Result<void> Start() override;
+    score::Result<void> Start() override;
     void Stop() noexcept override;
 
     explicit InternalConfigProviderService(

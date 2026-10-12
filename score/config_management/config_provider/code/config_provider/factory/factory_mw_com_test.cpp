@@ -18,8 +18,10 @@
 #include "score/config_management/config_provider/code/proxies/internal_config_provider.h"
 #include "score/config_management/config_provider/code/proxies/internal_config_provider_mock.h"
 
-#include "score/json/json_parser.h"
 #include "score/mw/service/find_service_strategy.h"
+#include "score/json/json_parser.h"
+#include "score/mw/com/runtime.h"
+#include "score/mw/com/runtime_configuration.h"
 
 #include <gtest/gtest.h>
 

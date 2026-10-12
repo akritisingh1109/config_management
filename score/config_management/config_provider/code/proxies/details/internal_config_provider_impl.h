@@ -17,11 +17,10 @@
 #include "score/config_management/config_provider/code/proxies/internal_config_provider.h"
 #include "score/config_management/lib/mw_com_types/internal_config_provider_type.h"
 
-#include "score/concurrency/condition_variable.h"
-
-#include "score/json/i_json_parser.h"
-
 #include "score/mw/log/logger.h"
+
+#include "score/concurrency/condition_variable.h"
+#include "score/json/i_json_parser.h"
 
 #include <score/jthread.hpp>
 #include <score/optional.hpp>
@@ -52,9 +51,9 @@ class InternalConfigProvider final : public IInternalConfigProvider
     InternalConfigProvider& operator=(InternalConfigProvider&&) = delete;
     ~InternalConfigProvider() noexcept override;
 
-    Result<json::Any> GetParameterSet(const std::string_view set_name,
-                                      const std::chrono::milliseconds timeout,
-                                      const AdditionalShmSizing& sizing) const override;
+    score::Result<score::json::Any> GetParameterSet(const std::string_view set_name,
+                                                    const std::chrono::milliseconds timeout,
+                                                    const AdditionalShmSizing& sizing) const override;
     bool TrySubscribeToLastUpdatedParameterSetEvent(const score::cpp::stop_token& stop_token,
                                                     OnChangedParameterSetCallback&& callback) override;
 
