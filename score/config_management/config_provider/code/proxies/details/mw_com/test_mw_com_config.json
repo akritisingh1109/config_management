@@ -1,7 +1,10 @@
 {
+  "global": {
+    "asil-level": "B"
+  },
   "serviceTypes": [
     {
-      "serviceTypeName": "/score/config_management/config_daemon/InternalConfigProviderService",
+      "serviceTypeName": "config_management/config_daemon/InternalConfigProviderService",
       "version": {
         "major": 1,
         "minor": 0
@@ -9,7 +12,7 @@
       "bindings": [
         {
           "binding": "SHM",
-          "serviceId": 3101,
+          "serviceId": 7000,
           "events": [
             {
               "eventName": "last_updated_parameter_set",
@@ -35,7 +38,7 @@
   "serviceInstances": [
     {
       "instanceSpecifier": "ConfigDaemonCustomer/ConfigDaemonCustomer_RootSwc/InternalConfigProviderAppRPort",
-      "serviceTypeName": "/score/config_management/config_daemon/InternalConfigProviderService",
+      "serviceTypeName": "config_management/config_daemon/InternalConfigProviderService",
       "version": {
         "major": 1,
         "minor": 0
@@ -43,7 +46,7 @@
       "instances": [
         {
           "instanceId": 1,
-          "asil-level": "QM",
+          "asil-level": "B",
           "binding": "SHM",
           "events": [
             {

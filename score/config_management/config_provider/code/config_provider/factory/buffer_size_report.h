@@ -43,7 +43,7 @@ struct AdditionalShmSizing
 /// Deployed alongside the other ConfigDaemon config files (see
 /// //ecu/xpad/xpad-shared/config/ipnext/isoc/config_management/config_daemon:buffer_size_report), produced by
 /// //platform/aas/config_management/tools/buffer_size_calculator.
-constexpr std::string_view kDefaultBufferSizeReportPath{"/bmw/platform/opt/ConfigDaemon/etc/buffer_size_report.json"};
+constexpr std::string_view kDefaultBufferSizeReportPath{"/opt/ConfigDaemon/etc/buffer_size_report.json"};
 
 /// @brief Loads and parses buffer_size_report.json (from kDefaultBufferSizeReportPath), returning the theoretical
 /// worst-case buffer size (in bytes) and the longest parameter set name (in bytes, excluding a null terminator)
@@ -64,10 +64,14 @@ class BufferSizeReport
     ///
     /// @param json_parser Callers must provide a JsonParser instance; passing nullptr returns
     /// kJsonParserNotProvided. Unit tests may inject an IJsonParserMock here to avoid touching the real filesystem.
+    /// @param buffer_size_report_path Defaults to the production path (kDefaultBufferSizeReportPath). Callers that
+    /// run outside of production deployment (e.g. in-process SCT test bindings that aren't relocated into sctf's
+    /// sandboxed mount namespace) may override this to point at their own, differently-located copy of the file.
     static Result<AdditionalShmSizing> GetMaxBufferSizeInfo(
         const score::cpp::optional<score::cpp::pmr::vector<std::string_view>>& initial_parameter_set_name_list,
         score::cpp::pmr::memory_resource* const memory_resource = score::cpp::pmr::get_default_resource(),
-        std::shared_ptr<json::IJsonParser> json_parser = nullptr);
+        std::shared_ptr<json::IJsonParser> json_parser = nullptr,
+        std::string_view buffer_size_report_path = kDefaultBufferSizeReportPath);
 };
 
 }  // namespace config_provider

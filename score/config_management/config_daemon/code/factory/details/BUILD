@@ -264,7 +264,7 @@ cc_gtest_unit_test(
                 "mw_com",
                 "exclusive",  # Sandboxing is not properly working with LoLa message passing 2.0 (Ticket-217341)
             ],
-            ["//score/config_management/config_daemon/code/services/details/mw_com:mw_com_config"],
+            ["//score/config_management/config_daemon/config:mw_com_config"],
         ),
         (
             "unit_test_ara_com",

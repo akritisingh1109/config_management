@@ -31,6 +31,7 @@
 #include <score/vector.hpp>
 
 #include <memory>
+#include <string>
 
 namespace score
 {
@@ -47,6 +48,13 @@ class ConfigProviderFactory final
 {
   public:
     ConfigProviderFactory();
+
+    /// @param buffer_size_report_path Overrides where buffer_size_report.json is read from (see
+    /// BufferSizeReport::GetMaxBufferSizeInfo()). Only needed by callers that can't rely on the production
+    /// default (kDefaultBufferSizeReportPath) resolving correctly - e.g. in-process SCT test bindings that run
+    /// outside of sctf's sandboxed mount namespace and must instead point at their own deployed copy.
+    explicit ConfigProviderFactory(std::string_view buffer_size_report_path);
+
     ~ConfigProviderFactory() = default;
     ConfigProviderFactory(ConfigProviderFactory&&) = delete;
     ConfigProviderFactory(const ConfigProviderFactory&) = delete;
@@ -204,8 +212,10 @@ class ConfigProviderFactory final
         // last_updated_parameter_set EVENT for calibration sets, not the semi-dynamic get_parameter_set METHOD,
         // whose coding parameter set names routinely exceed it - so this must be computed from
         // buffer_size_report.json rather than a fixed constant.
-        const auto shm_sizing_result = BufferSizeReport::GetMaxBufferSizeInfo(
-            initial_parameter_set_name_list, memory_resource, std::make_shared<json::JsonParser>());
+        const auto shm_sizing_result = BufferSizeReport::GetMaxBufferSizeInfo(initial_parameter_set_name_list,
+                                                                              memory_resource,
+                                                                              std::make_shared<json::JsonParser>(),
+                                                                              buffer_size_report_path_);
         if (!shm_sizing_result.has_value())
         {
             logger_.LogError() << "ConfigProviderFactory::" << __func__
@@ -247,6 +257,7 @@ class ConfigProviderFactory final
     }
 
     mw::log::Logger& logger_;
+    std::string buffer_size_report_path_;
 };
 
 }  // namespace config_provider

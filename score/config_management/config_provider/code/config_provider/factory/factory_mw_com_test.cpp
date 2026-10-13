@@ -22,9 +22,8 @@
 #include <gtest/gtest.h>
 
 #include <cstdio>
-#include <filesystem>
+#include <cstdlib>
 #include <fstream>
-#include <system_error>
 
 namespace score
 {
@@ -53,19 +52,12 @@ class ConfigProviderFactoryTest : public ::testing::Test
     void SetUp() override
     {
         // ConfigProviderFactory::Create() now looks up the theoretical worst-case parameter set buffer size from
-        // buffer_size_report.json (deployed alongside the other ConfigDaemon config files in production, see
-        // //ecu/xpad/xpad-shared/config/ipnext/isoc/config_management/config_daemon:buffer_size_report). This test
-        // provides a minimal fixture at that fixed path. Writing there requires the same filesystem permissions as
-        // production (qtsafefs on target, root elsewhere); skip rather than fail where those aren't available (e.g.
-        // a developer's local sandbox).
-        buffer_size_report_path = std::string{kDefaultBufferSizeReportPath};
-        std::error_code error_code;
-        std::filesystem::create_directories(std::filesystem::path{buffer_size_report_path}.parent_path(), error_code);
-        if (error_code)
-        {
-            GTEST_SKIP() << "Cannot create " << std::filesystem::path{buffer_size_report_path}.parent_path() << ": "
-                         << error_code.message();
-        }
+        // buffer_size_report.json. Rather than writing to the fixed production path (kDefaultBufferSizeReportPath,
+        // which requires qtsafefs/root-equivalent filesystem permissions), use ConfigProviderFactory's
+        // buffer_size_report_path override and point it at a plain file under the test's writable TEST_TMPDIR.
+        const char* const test_tmpdir = std::getenv("TEST_TMPDIR");
+        buffer_size_report_path =
+            std::string{test_tmpdir != nullptr ? test_tmpdir : "/tmp"} + "/buffer_size_report.json";
         std::ofstream buffer_size_report_file{buffer_size_report_path};
         buffer_size_report_file << R"({"buffer_size_mapping": {"DummyParameterSet": 16425}})";
         buffer_size_report_file.close();
@@ -120,7 +112,7 @@ TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_DefaultPolling_NoPersiste
         "Description",
         "This test verifies successful creation of default polling without persistency via config provider factory.");
     // Given that no persistency or polling related parameters are provided during creation
-    score::config_management::config_provider::ConfigProviderFactory config_provider_factory;
+    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{buffer_size_report_path};
     auto config_provider =
         config_provider_factory.Create<DummyPort>({},                                // default stop_token
                                                   std::chrono::milliseconds(0U),     // zero timeout
@@ -141,7 +133,7 @@ TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_CustomPolling_NoPersisten
         "Description",
         "This test verifies successful creation of custom polling without persistency via config provider factory.");
     // Given that polling related parameters is provided, but no persistency is provided during creation
-    score::config_management::config_provider::ConfigProviderFactory config_provider_factory;
+    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{buffer_size_report_path};
     auto config_provider =
         config_provider_factory.Create<DummyPort>({},                             // default stop_token
                                                   std::chrono::milliseconds(0U),  // zero timeout
@@ -164,7 +156,7 @@ TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_DefaultPolling_Persistenc
                    "This test verifies successful creation of default polling with valid persistency via config "
                    "provider factory.");
     // Given that persistency is provided, but no polling related parameters is provided during creation
-    score::config_management::config_provider::ConfigProviderFactory config_provider_factory;
+    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{buffer_size_report_path};
     auto persistency_mock = score::cpp::pmr::make_unique<PersistencyMock>(score::cpp::pmr::get_default_resource());
     auto config_provider =
         config_provider_factory.Create<DummyPort>({},                                // default stop_token
@@ -186,7 +178,7 @@ TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_CustomPolling_Persistency
         "Description",
         "This test verifies successful creation of custom polling with valid persistency via config provider factory.");
     // Given that both persistency and polling related parameters are provided during creation
-    score::config_management::config_provider::ConfigProviderFactory config_provider_factory;
+    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{buffer_size_report_path};
     auto persistency_mock = score::cpp::pmr::make_unique<PersistencyMock>(score::cpp::pmr::get_default_resource());
     auto config_provider =
         config_provider_factory.Create<DummyPort>({},                           // default stop_token
@@ -212,7 +204,7 @@ TEST_F(ConfigProviderFactoryTest, FoundServiceDuringCreation)
                    "23162623: This test ensures that callback is triggered when service becomes available");
 
     // Given the service can be found during creation
-    score::config_management::config_provider::ConfigProviderFactory config_provider_factory;
+    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{buffer_size_report_path};
     std::atomic<bool> callback_is_called_upon_found{false};
     std::condition_variable callback_cv;
     std::mutex callback_mutex;

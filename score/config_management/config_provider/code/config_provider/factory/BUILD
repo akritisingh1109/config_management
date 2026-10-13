@@ -82,10 +82,6 @@ cc_test(
     srcs = ["factory_mw_com_test.cpp"],
     data = ["//score/config_management/config_provider/code/proxies/details:test_mw_com_config"],
     features = COMPILER_WARNING_FEATURES,
-    linkopts = select({
-        "@platforms//os:qnx": [],
-        "//conditions:default": ["-lstdc++fs"],
-    }),
     tags = [
         "exclusive",  # Sandboxing is not properly working with LoLa message passing 2.0 (Ticket-217341)
         "unit",
@@ -95,7 +91,6 @@ cc_test(
     ],
     deps = [
         ":factory_mw_com",
-        "//platform/aas/config_management/lib/mw_com_types:internal_config_provider_type",
         "//score/config_management/config_provider/code/persistency:mock",
         "@googletest//:gtest_main",
         "@score_baselibs//score/json:json_parser",

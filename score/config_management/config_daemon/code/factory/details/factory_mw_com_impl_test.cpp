@@ -49,7 +49,7 @@ class TestServiceFactoryMwImpl : public ::testing::Test
     static void SetUpTestSuite()
     {
         score::mw::com::runtime::RuntimeConfiguration runtime_configuration{
-            "./score/config_management/config_daemon/code/services/details/mw_com/mw_com_config.json"};
+            "./score/config_management/config_daemon/config/mw_com_config.json"};
         score::mw::com::runtime::InitializeRuntime(runtime_configuration);
     }
     void SetUp() override

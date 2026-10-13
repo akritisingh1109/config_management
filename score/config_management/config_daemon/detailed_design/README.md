@@ -238,9 +238,11 @@ The secpol file is located at [`config_daemon.secpol`](../../../../../ecu/xpad/a
 | `devb_virtio_t` | Implementation detail of qemu testing. |
 | `DiagnosticManagerSwc_t` | Diagnostic Manager — used for coding diagnostic jobs and DTC reporting |
 | `execution_manager_t` | AUTOSAR Execution Manager — manages process lifecycle |
+| `fsevmgr_t` | For managing file system events (needed for LoLa service discovery). |
 | `IPCServiceDiscoveryDaemon_t` | Required by Vector mw::com IPC service discovery. During startup, ConfigDaemon proxy creation/`FindService` resolves service instances (`FaultEventProxy`, `CryptoProxy`, `SecureFeatureRegistryProxy`, `VINProxy`, `VPCProxy`, `ProgIdProxy`, `SoftwareIdProviderProxy`) via this daemon. |
 | `lifecycle_state_machine_t` | LSM uses the `InternalConfigProvider` interface to read coding parameters from ConfigD — specifically the `FasCountryVariants` coding parameter, which LSM uses to determine the current software variant and drive the `CountryVariant` function group state. |
 | `PhmHeartBeatProxy_t` | Platform Health Management — ConfigD reports hardware and software fault events via `FaultEventProxy`. The events are used by PhmHeartBeatProxy to set primary DTCs. |
+| `pipe_t` | Communication through pipes (needed by LoLa's `abortable_blocking_reader`). |
 | `qtsafefsd_t` | QNX safe filesystem — coding and calibration parameter files are stored under `/opt` which is integrity-protected by the read-only qtsafefs (ASIL-B). |
 | `secured_t` | Secure daemon — ConfigD subscribes to the `SecureDebug` interface provided by `secured` to determine whether to offer the `ConfigCalibrationService` (toggled off in field mode, on in engineering mode). |
 | `SoftwareIdProvider_t` | Provides SWID for ECU programming detection |
@@ -258,3 +260,4 @@ The secpol file is located at [`config_daemon.secpol`](../../../../../ecu/xpad/a
 | `/dev/name/local/amsr/amsr_ipc_server-0000016578_0000000101` | `InternalConfigProvider` service endpoint (service ID 16578) — ConfigDaemon registers this skeleton to expose the `InternalConfigProvider` interface, which provides read-only access to configuration parameters for all client applications. |
 | `/dev/name/local/amsr/amsr_ipc_server-0000061020_0000002273` | Vector AMSR IPC infrastructure server - ConfigDaemon connects to this during `mw::core::Initialize()` to register itself in the `mw::com` runtime, enabling it to offer its services (`ConfigCalibration`, `InternalConfigProvider`) and discover/connect to other services. Required by all processes using the Vector adaptive stack. |
 | `/mw_com/message_passing/logging.CfgD.1012` | DLT logging channel for ConfigDaemon |
+| `/mw_com/message_passing/LoLa*` | Needed for message_passing use in LoLa. |

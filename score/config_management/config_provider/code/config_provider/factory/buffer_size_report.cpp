@@ -34,7 +34,8 @@ constexpr std::string_view kBufferSizeMappingKey{"buffer_size_mapping"};
 Result<AdditionalShmSizing> BufferSizeReport::GetMaxBufferSizeInfo(
     const score::cpp::optional<score::cpp::pmr::vector<std::string_view>>& initial_parameter_set_name_list,
     score::cpp::pmr::memory_resource* const memory_resource,
-    std::shared_ptr<json::IJsonParser> json_parser)
+    std::shared_ptr<json::IJsonParser> json_parser,
+    std::string_view buffer_size_report_path)
 {
     if (json_parser == nullptr)
     {
@@ -52,37 +53,37 @@ Result<AdditionalShmSizing> BufferSizeReport::GetMaxBufferSizeInfo(
     // FromFile API is used for a file stored under /opt/ConfigDaemon/, which is protected by qtsafefs, guaranteeing
     // the integrity of the file's contents. Hence FromFile API is safe to use in this scenario.
     // NOLINTNEXTLINE(score-banned-function): justification is given above
-    auto report_result = json_parser->FromFile(kDefaultBufferSizeReportPath);
+    auto report_result = json_parser->FromFile(buffer_size_report_path);
     if (!report_result.has_value())
     {
-        mw::log::LogError() << "BufferSizeReport::" << __func__ << ": Failed to load" << kDefaultBufferSizeReportPath
-                            << ":" << report_result.error().UserMessage();
-        return MakeUnexpected(ConfigProviderError::kBufferSizeReportNotFound, kDefaultBufferSizeReportPath);
+        mw::log::LogError() << "BufferSizeReport::" << __func__ << ": Failed to load" << buffer_size_report_path << ":"
+                            << report_result.error().UserMessage();
+        return MakeUnexpected(ConfigProviderError::kBufferSizeReportNotFound, buffer_size_report_path);
     }
 
     const auto root_object_result = report_result.value().As<json::Object>();
     if (!root_object_result.has_value())
     {
-        mw::log::LogError() << "BufferSizeReport::" << __func__ << ": Expected" << kDefaultBufferSizeReportPath
+        mw::log::LogError() << "BufferSizeReport::" << __func__ << ": Expected" << buffer_size_report_path
                             << "to contain a JSON object";
-        return MakeUnexpected(ConfigProviderError::kBufferSizeReportParsingFailed, kDefaultBufferSizeReportPath);
+        return MakeUnexpected(ConfigProviderError::kBufferSizeReportParsingFailed, buffer_size_report_path);
     }
 
     const auto& root_object = root_object_result.value().get();
     const auto mapping_it = root_object.find(kBufferSizeMappingKey);
     if (mapping_it == root_object.end())
     {
-        mw::log::LogError() << "BufferSizeReport::" << __func__ << ":" << kDefaultBufferSizeReportPath
-                            << "is missing the" << kBufferSizeMappingKey << "key";
-        return MakeUnexpected(ConfigProviderError::kBufferSizeReportParsingFailed, kDefaultBufferSizeReportPath);
+        mw::log::LogError() << "BufferSizeReport::" << __func__ << ":" << buffer_size_report_path << "is missing the"
+                            << kBufferSizeMappingKey << "key";
+        return MakeUnexpected(ConfigProviderError::kBufferSizeReportParsingFailed, buffer_size_report_path);
     }
 
     const auto mapping_object_result = mapping_it->second.As<json::Object>();
     if (!mapping_object_result.has_value())
     {
         mw::log::LogError() << "BufferSizeReport::" << __func__ << ":" << kBufferSizeMappingKey << "in"
-                            << kDefaultBufferSizeReportPath << "is not a JSON object";
-        return MakeUnexpected(ConfigProviderError::kBufferSizeReportParsingFailed, kDefaultBufferSizeReportPath);
+                            << buffer_size_report_path << "is not a JSON object";
+        return MakeUnexpected(ConfigProviderError::kBufferSizeReportParsingFailed, buffer_size_report_path);
     }
 
     // Tracks max sizes in a single pass over the report, without building a map of every parameter set in
@@ -99,9 +100,9 @@ Result<AdditionalShmSizing> BufferSizeReport::GetMaxBufferSizeInfo(
         if (!size_result.has_value())
         {
             mw::log::LogError() << "BufferSizeReport::" << __func__ << ": Buffer size for parameter set"
-                                << entry.first.GetAsStringView() << "in" << kDefaultBufferSizeReportPath
+                                << entry.first.GetAsStringView() << "in" << buffer_size_report_path
                                 << "is not an unsigned integer";
-            return MakeUnexpected(ConfigProviderError::kBufferSizeReportParsingFailed, kDefaultBufferSizeReportPath);
+            return MakeUnexpected(ConfigProviderError::kBufferSizeReportParsingFailed, buffer_size_report_path);
         }
         const auto entry_name = entry.first.GetAsStringView();
         const auto buffer_size = static_cast<std::size_t>(size_result.value());
@@ -118,7 +119,7 @@ Result<AdditionalShmSizing> BufferSizeReport::GetMaxBufferSizeInfo(
     for (const auto& not_found : pending)
     {
         mw::log::LogError() << "BufferSizeReport::" << __func__ << ": Parameter set" << not_found << "was not found in"
-                            << kDefaultBufferSizeReportPath << "- ignoring it";
+                            << buffer_size_report_path << "- ignoring it";
     }
     return AdditionalShmSizing{max_payload_size, max_name_length};
 }

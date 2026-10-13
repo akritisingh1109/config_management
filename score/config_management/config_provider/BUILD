@@ -18,29 +18,28 @@ cc_library(
     tags = ["FUSA"],
     visibility = ["//visibility:public"],
     deps = select({
-        "//platform/aas/config_management/flags:is_mw_com": [],
+        "//platform/aas/config_management/flags:is_mw_com": ["//score/config_management/config_provider/code/config_provider/factory:factory_mw_com"],
         "//conditions:default": ["//score/config_management/config_provider/code/config_provider/factory:factory_socal_r20_11"],
     }),
 )
 
 cc_library(
-    name = "config_provider_mw_com",
-    tags = ["FUSA"],
-    visibility = ["//visibility:public"],
-    deps = ["//score/config_management/config_provider/code/config_provider/factory:factory_mw_com"],
-)
-
-cc_library(
     name = "config_provider_socal_r20_11",
     tags = ["FUSA"],
-    visibility = ["//score/config_management/config_provider:__subpackages__"],
+    visibility = [
+        "//platform/aas/config_management/parameter_provider/code/parameter_provider/config_provider_builder:__pkg__",
+        "//score/config_management/config_provider:__subpackages__",
+    ],
     deps = ["//score/config_management/config_provider/code/config_provider/factory:factory_socal_r20_11"],
 )
 
 alias(
     name = "config_provider_socal_r20_11_for_unit_test",
     actual = "//score/config_management/config_provider/code/config_provider/factory:factory_socal_r20_11_for_unit_tests",
-    visibility = ["//score/config_management/config_provider:__subpackages__"],
+    visibility = [
+        "//platform/aas/config_management/parameter_provider/code/parameter_provider/config_provider_builder:__pkg__",
+        "//score/config_management/config_provider:__subpackages__",
+    ],
 )
 
 alias(
