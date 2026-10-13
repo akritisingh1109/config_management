@@ -43,7 +43,7 @@ struct AdditionalShmSizing
 /// Deployed alongside the other ConfigDaemon config files (see
 /// //ecu/xpad/xpad-shared/config/ipnext/isoc/config_management/config_daemon:buffer_size_report), produced by
 /// //platform/aas/config_management/tools/buffer_size_calculator.
-constexpr std::string_view kDefaultBufferSizeReportPath{"/opt/ConfigDaemon/etc/buffer_size_report.json"};
+constexpr std::string_view kDefaultBufferSizeReportPath{"/bmw/platform/opt/ConfigDaemon/etc/buffer_size_report.json"};
 
 /// @brief Loads and parses buffer_size_report.json (from kDefaultBufferSizeReportPath), returning the theoretical
 /// worst-case buffer size (in bytes) and the longest parameter set name (in bytes, excluding a null terminator)

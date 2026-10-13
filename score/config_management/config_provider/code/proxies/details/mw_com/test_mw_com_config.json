@@ -1,7 +1,4 @@
 {
-  "global": {
-    "asil-level": "B"
-  },
   "serviceTypes": [
     {
       "serviceTypeName": "config_management/config_daemon/InternalConfigProviderService",
@@ -46,7 +43,7 @@
       "instances": [
         {
           "instanceId": 1,
-          "asil-level": "B",
+          "asil-level": "QM",
           "binding": "SHM",
           "events": [
             {
