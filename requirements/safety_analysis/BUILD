@@ -15,14 +15,8 @@ load(
     "@score_tooling//bazel/rules/rules_score:rules_score.bzl",
     "assumptions_of_use",
     "dependability_analysis",
-    "fmea",
-)
-
-# Failure Modes
-fmea(
-    name = "fmea",
-    failuremodes = ["failure_modes.trlc"],
-    visibility = ["//visibility:public"],
+    "fault_trees",
+    "safety_analysis",
 )
 
 assumptions_of_use(
@@ -31,8 +25,20 @@ assumptions_of_use(
     visibility = ["//visibility:public"],
 )
 
+# No failure modes / fault trees are modelled yet; the AoUs are attached through the safety analysis.
+fault_trees(
+    name = "fault_trees",
+)
+
+safety_analysis(
+    name = "safety_analysis",
+    fault_trees = ":fault_trees",
+    safety_measures = [":assumptions_of_use"],
+)
+
 dependability_analysis(
     name = "dependability_analysis",
-    fmea = [":fmea"],
+    arch_design = "//score/config_management/dependability/software_architectural_design:software_architectural_design",
+    safety_analysis = [":safety_analysis"],
     visibility = ["//visibility:public"],
 )
