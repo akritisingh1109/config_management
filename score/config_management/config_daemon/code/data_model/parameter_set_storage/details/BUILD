@@ -82,10 +82,7 @@ load_custom_targets()
 
 cc_test(
     name = "unit_test",
-    srcs = select({
-        "//score/config_management/config_daemon/code:is_score_variant": ["parameter_set_storage_score_impl_test.cpp"],
-        "//conditions:default": ["parameter_set_storage_impl_test.cpp"],
-    }),
+    srcs = ["parameter_set_storage_score_impl_test.cpp"],
     features = COMMON_FEATURES,
     tags = ["unit"],
     visibility = [
@@ -95,16 +92,8 @@ cc_test(
         "//score/config_management/config_daemon/code/data_model:parameterset_collection_mock",
         "@googletest//:gtest",
         "@score_logging//score/mw/log/test/console_logging_environment",
-    ] + select({
-        "//score/config_management/config_daemon/code:is_score_variant": [
-            ":details_score_for_unit_test",
-            "@googletest//:gtest_main",
-        ],
-        "//conditions:default": [
-            ":details_for_unit_test",
-            "@score_baselibs//score/filesystem:mock",
-            "@score_baselibs//score/hash:hash_mock",
-            "@score_baselibs//score/json:mock",
-        ],
-    }),
+    ] + [
+        ":details_score_for_unit_test",
+        "@googletest//:gtest_main",
+    ],
 )

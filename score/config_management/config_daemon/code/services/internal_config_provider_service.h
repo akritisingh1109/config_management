@@ -15,7 +15,7 @@
 #define SCORE_CONFIG_MANAGEMENT_CONFIG_DAEMON_CODE_SERVICES_INTERNAL_CONFIG_PROVIDER_SERVICE_H
 
 #include "score/config_management/config_daemon/code/types/initial_qualifier_state/initial_qualifier_state.h"
-#include "score/mw/service/provided_service.h"
+#include "score/mw/service/managed_service.h"
 #include <score/callback.hpp>
 #include <string>
 
@@ -29,7 +29,7 @@ namespace config_daemon
 using LastUpdatedParameterSetSender = score::cpp::callback<bool(const std::string_view), 64U>;
 using InitialQualifierStateSender = score::cpp::callback<void(const InitialQualifierState), 64U>;
 
-class IInternalConfigProviderService : public ::score::mw::service::ProvidedService
+class IInternalConfigProviderService : public ::score::mw::service::ManagedService
 {
   public:
     IInternalConfigProviderService() noexcept = default;

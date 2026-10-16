@@ -13,9 +13,9 @@
 
 #include "score/config_management/config_daemon/code/json_helper/details/json_helper_impl.h"
 
-#include "score/filesystem/details/standard_filesystem.h"
 #include "score/json/json_parser.h"
 #include "score/json/json_writer.h"
+#include "score/filesystem/details/standard_filesystem.h"
 
 namespace score
 {
@@ -31,8 +31,8 @@ JsonHelper::JsonHelper()
       json_parser_{std::make_shared<json::JsonParser>()},
       json_writer_{std::make_shared<json::JsonWriter>()},
       json_synced_writer_{std::make_shared<json::JsonWriter>(json::FileSyncMode::kSynced)},
-      standart_filesystem_{std::make_shared<filesystem::StandardFilesystem>()},
-      file_factory_{std::make_shared<filesystem::FileFactory>()}
+      standart_filesystem_{std::make_shared<score::filesystem::StandardFilesystem>()},
+      file_factory_{std::make_shared<score::filesystem::FileFactory>()}
 {
 }
 
@@ -48,11 +48,11 @@ std::shared_ptr<json::IJsonWriter> JsonHelper::GetJsonSyncedWriter() const noexc
 {
     return json_synced_writer_;
 }
-std::shared_ptr<filesystem::IStandardFilesystem> JsonHelper::GetStandardFilesystem() const noexcept
+std::shared_ptr<score::filesystem::IStandardFilesystem> JsonHelper::GetStandardFilesystem() const noexcept
 {
     return standart_filesystem_;
 }
-std::shared_ptr<filesystem::IFileFactory> JsonHelper::GetFileFactory() const noexcept
+std::shared_ptr<score::filesystem::IFileFactory> JsonHelper::GetFileFactory() const noexcept
 {
     return file_factory_;
 }

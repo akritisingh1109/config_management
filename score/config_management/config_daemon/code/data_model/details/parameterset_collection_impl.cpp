@@ -52,7 +52,7 @@ Result<void> ParameterSetCollection::Insert(const score::cpp::string_view set_na
     }
     else
     {
-        parameter_set = std::make_shared<ParameterSet>(std::make_unique<json::JsonWriter>());
+        parameter_set = std::make_shared<ParameterSet>();
         score::cpp::ignore = parameter_sets_.emplace(AsString(set_name), parameter_set);
     }
 

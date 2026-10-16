@@ -39,15 +39,9 @@ load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER
             False,
             [
                 "//score/config_management/config_daemon/code/plugins:plugin_creator",
-            ] + select({
-                "//score/config_management/config_daemon/code:is_score_variant": [
-                    "//score/config_management/config_daemon/code/plugins/demo_json/plugin_creator:demo_json_plugin_creator",
-                ],
-                "//conditions:default": [
-                    "//score/config_management/config_daemon/code/plugins/coding/plugin_creator:coding_plugin_creator",
-                    "//score/config_management/config_daemon/code/plugins/calibration/plugin_creator:calibration_plugin_creator",
-                ],
-            }),
+            ] + [
+                "//score/config_management/config_daemon/code/plugins/demo_json/plugin_creator:demo_json_plugin_creator",
+            ],
         ),
         (
             "details_for_unit_test",
@@ -55,17 +49,9 @@ load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER
             [
                 "//score/config_management/config_daemon/code/plugins:mock",
                 "//score/config_management/config_daemon/code/plugins:plugin_creator_mock",
-            ] + select({
-                "//score/config_management/config_daemon/code:is_score_variant": [
-                    "//score/config_management/config_daemon/code/plugins/demo_json/plugin_creator:demo_json_plugin_creator",
-                ],
-                "//conditions:default": [
-                    "//score/config_management/config_daemon/code/plugins/coding/plugin_creator:coding_plugin_creator_for_unit_test",
-                    "//score/config_management/config_daemon/code/plugins/calibration/plugin_creator:calibration_plugin_creator_for_unit_test",
-                    "//score/config_management/config_daemon/code/plugins/calibration/details:calibration_impl_for_test",
-                    "//score/config_management/config_daemon/code/plugins/calibration/factory/details:factory_impl_for_test",
-                ],
-            }),
+            ] + [
+                "//score/config_management/config_daemon/code/plugins/demo_json/plugin_creator:demo_json_plugin_creator",
+            ],
         ),
     ]
 ]

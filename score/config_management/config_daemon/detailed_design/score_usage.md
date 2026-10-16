@@ -171,7 +171,7 @@ plugin_creators_.emplace_back(std::make_unique<coding::PluginCreator>());
 Add a dependency for your `PluginCreator` library to the BUILD file located at `ConfigDaemon/code/plugins/plugin_collector/details/BUILD`.
 
 ### Build Switch
-To switch the build to the score variant, you must run the build with the optional build flag added:
+To switch the build to the score variant, you must run the build with the optional build flags added:
 ```bash
-bazel build //score/config_management/config_daemon/code/app/details:app --//score/config_management/config_daemon/code/plugins/plugin_collector/details:score_variant=true
+bazel build //score/config_management/config_daemon/code/app/details:app --//platform/aas/config_management/flags:score_variant=true --//platform/aas/config_management/flags:mw_com=true
 ```

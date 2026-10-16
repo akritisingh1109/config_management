@@ -14,12 +14,51 @@
 
 #include "score/json/json_writer.h"
 
+#include <string>
+#include <string_view>
+
 namespace score
 {
 namespace config_management
 {
 namespace config_provider
 {
+
+namespace
+{
+
+// Maps the human-readable qualifier strings written by
+// tools/default_parameter_set_collection/default_parameter_set_collection_lib.py (and used by the
+// "actual" persisted collection) to their corresponding ParameterSetQualifier enum value.
+std::optional<score::config_management::config_daemon::ParameterSetQualifier> QualifierFromString(
+    const std::string_view qualifier_name) noexcept
+{
+    using score::config_management::config_daemon::ParameterSetQualifier;
+
+    if (qualifier_name == "Unqualified")
+    {
+        return ParameterSetQualifier::kUnqualified;
+    }
+    if (qualifier_name == "Qualified")
+    {
+        return ParameterSetQualifier::kQualified;
+    }
+    if (qualifier_name == "Default")
+    {
+        return ParameterSetQualifier::kDefault;
+    }
+    if (qualifier_name == "Modified")
+    {
+        return ParameterSetQualifier::kModified;
+    }
+    if (qualifier_name == "Qualifying")
+    {
+        return ParameterSetQualifier::kQualifying;
+    }
+    return std::nullopt;
+}
+
+}  // namespace
 
 ParameterSet::ParameterSet(score::json::Any set_json, score::cpp::pmr::memory_resource* const memory_resource)
     : logger_{mw::log::CreateLogger(std::string_view("CfgP"))},
@@ -185,6 +224,18 @@ score::Result<score::config_management::config_daemon::ParameterSetQualifier> Pa
         logger_.LogError() << "ParameterSet::" << __func__ << ": Failed to find qualifier";
         return MakeUnexpected(ConfigProviderError::kParsingFailed);
     }
+
+    const auto string_value_result = qualifier_it->second.As<std::string>();
+    if (string_value_result.has_value())
+    {
+        const auto qualifier_from_string = QualifierFromString(string_value_result.value().get());
+        if (qualifier_from_string.has_value())
+        {
+            return qualifier_from_string.value();
+        }
+        return MakeUnexpected(ConfigProviderError::kValueCastingError);
+    }
+
     const auto value_result = qualifier_it->second.As<std::uint8_t>();
     if (value_result.has_value() == true)
     {
