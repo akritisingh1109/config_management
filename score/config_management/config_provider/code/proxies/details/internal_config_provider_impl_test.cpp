@@ -39,7 +39,10 @@ namespace
 
 const std::chrono::milliseconds kZeroTimeout{0};
 
-const std::string kICPSpecifier{"ConfigDaemonCustomer/ConfigDaemonCustomer_RootSwc/InternalConfigProviderAppRPort"};
+const std::string kProxyICPSpecifier{
+    "ConfigDaemonCustomer/ConfigDaemonCustomer_RootSwc/InternalConfigProviderAppRPort"};
+const std::string kSkeletonICPSpecifier{
+    "ConfigDaemonCustomer/ConfigDaemonCustomer_RootSwc/InternalConfigProviderAppPPort"};
 using MwComSkeleton = score::mw::com::AsSkeleton<score::config_management::config_daemon::InternalConfigProviderInterface>;
 using MwComInitialQualifierStateType = score::config_management::config_daemon::mw_com_icp_types::InitialQualifierState;
 
@@ -78,7 +81,7 @@ class InternalConfigProviderTest : public ::testing::Test
     std::unique_ptr<MwComSkeleton> CreateService() const
     {
         // Prepare skeleton to offer the service
-        auto instance_specifier_result = score::mw::com::InstanceSpecifier::Create(std::string(kICPSpecifier));
+        auto instance_specifier_result = score::mw::com::InstanceSpecifier::Create(std::string(kSkeletonICPSpecifier));
         // ASSERT_TRUE(instance_specifier_result.has_value());
 
         auto service_result = MwComSkeleton::Create(std::move(instance_specifier_result).value());
@@ -97,13 +100,13 @@ class InternalConfigProviderTest : public ::testing::Test
 
     std::unique_ptr<MWProxy> CreateProxy() const
     {
-        auto instance_specifier_result = score::mw::com::InstanceSpecifier::Create(std::string(kICPSpecifier));
+        auto instance_specifier_result = score::mw::com::InstanceSpecifier::Create(std::string(kProxyICPSpecifier));
 
         const auto proxy_handles_result = MWProxy::FindService(std::move(instance_specifier_result).value());
         const auto& proxy_handles = proxy_handles_result.value();
         if (proxy_handles.empty())
         {
-            throw std::runtime_error("FindService() did not return any service handles for " + kICPSpecifier);
+            throw std::runtime_error("FindService() did not return any service handles for " + kProxyICPSpecifier);
         }
 
         return std::make_unique<MWProxy>(MWProxy::Create(proxy_handles.front()).value());

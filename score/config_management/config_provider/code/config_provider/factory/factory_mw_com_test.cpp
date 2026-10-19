@@ -42,7 +42,12 @@ struct DummyPort
     }
 };
 
-const std::string kICPSpecifier{"ConfigDaemonCustomer/ConfigDaemonCustomer_RootSwc/InternalConfigProviderAppRPort"};
+// test_mw_com_config.json now declares two separate serviceInstances entries:
+// the PPort instance (events/fields/methods, offered by the skeleton below) and the RPort instance (methods only,
+// consumed via DummyPort above by ConfigProviderFactory::Create<DummyPort>() as the proxy side). The skeleton must
+// use the PPort specifier - it's the only entry that actually declares last_updated_parameter_set/
+// initial_qualifier_state in its LolaServiceInstanceDeployment.
+const std::string kICPSpecifier{"ConfigDaemonCustomer/ConfigDaemonCustomer_RootSwc/InternalConfigProviderAppPPort"};
 using MwComSkeleton = score::mw::com::AsSkeleton<score::config_management::config_daemon::InternalConfigProviderInterface>;
 using MwComInitialQualifierStateType = score::config_management::config_daemon::mw_com_icp_types::InitialQualifierState;
 
