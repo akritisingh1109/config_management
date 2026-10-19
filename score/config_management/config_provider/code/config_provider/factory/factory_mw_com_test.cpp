@@ -112,7 +112,7 @@ TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_DefaultPolling_NoPersiste
         "Description",
         "This test verifies successful creation of default polling without persistency via config provider factory.");
     // Given that no persistency or polling related parameters are provided during creation
-    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{buffer_size_report_path};
+    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{};
     auto config_provider =
         config_provider_factory.Create<DummyPort>({},                                // default stop_token
                                                   std::chrono::milliseconds(0U),     // zero timeout
@@ -133,7 +133,7 @@ TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_CustomPolling_NoPersisten
         "Description",
         "This test verifies successful creation of custom polling without persistency via config provider factory.");
     // Given that polling related parameters is provided, but no persistency is provided during creation
-    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{buffer_size_report_path};
+    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{};
     auto config_provider =
         config_provider_factory.Create<DummyPort>({},                             // default stop_token
                                                   std::chrono::milliseconds(0U),  // zero timeout
@@ -156,7 +156,7 @@ TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_DefaultPolling_Persistenc
                    "This test verifies successful creation of default polling with valid persistency via config "
                    "provider factory.");
     // Given that persistency is provided, but no polling related parameters is provided during creation
-    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{buffer_size_report_path};
+    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{};
     auto persistency_mock = score::cpp::pmr::make_unique<PersistencyMock>(score::cpp::pmr::get_default_resource());
     auto config_provider =
         config_provider_factory.Create<DummyPort>({},                                // default stop_token
@@ -178,7 +178,7 @@ TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_CustomPolling_Persistency
         "Description",
         "This test verifies successful creation of custom polling with valid persistency via config provider factory.");
     // Given that both persistency and polling related parameters are provided during creation
-    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{buffer_size_report_path};
+    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{};
     auto persistency_mock = score::cpp::pmr::make_unique<PersistencyMock>(score::cpp::pmr::get_default_resource());
     auto config_provider =
         config_provider_factory.Create<DummyPort>({},                           // default stop_token
@@ -204,7 +204,7 @@ TEST_F(ConfigProviderFactoryTest, FoundServiceDuringCreation)
                    "23162623: This test ensures that callback is triggered when service becomes available");
 
     // Given the service can be found during creation
-    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{buffer_size_report_path};
+    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{};
     std::atomic<bool> callback_is_called_upon_found{false};
     std::condition_variable callback_cv;
     std::mutex callback_mutex;
@@ -235,13 +235,15 @@ TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_MissingBufferSizeReport_F
                    "(falling back to default buffer sizes instead of returning nullptr) when "
                    "buffer_size_report.json cannot be found.");
     // Given that buffer_size_report_path points at a file that does not exist
-    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{buffer_size_report_path + "_missing"};
-    auto config_provider =
-        config_provider_factory.Create<DummyPort>({},                                // default stop_token
-                                                  std::chrono::milliseconds(0U),     // zero timeout
-                                                  score::cpp::pmr::get_default_resource(),  // default memory resource
-                                                  []() noexcept {}                   // empty callback
-        );
+    score::config_management::config_provider::ConfigProviderFactory config_provider_factory{};
+    auto config_provider = config_provider_factory.Create<DummyPort>(
+        {},                                    // default stop_token
+        std::chrono::milliseconds(0U),         // zero timeout
+        score::cpp::pmr::vector<std::string_view>{},  // empty parameter set name list
+        score::cpp::pmr::get_default_resource(),      // default memory resource
+        []() noexcept {},                      // empty callback
+        buffer_size_report_path + "_missing"   // path to a non-existent file
+    );
     // Then a valid ConfigProvider object is still created, using default buffer sizes instead of failing entirely.
     ASSERT_NE(nullptr, config_provider) << "Factory did not fall back to default buffer sizes as expected";
 }

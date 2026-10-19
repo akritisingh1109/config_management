@@ -15,6 +15,14 @@ load(
     "@score_tooling//bazel/rules/rules_score:rules_score.bzl",
     "assumptions_of_use",
     "dependability_analysis",
+    "fmea",
+)
+
+# Failure Modes
+fmea(
+    name = "fmea",
+    failuremodes = ["failure_modes.trlc"],
+    visibility = ["//visibility:public"],
 )
 
 assumptions_of_use(
@@ -25,5 +33,6 @@ assumptions_of_use(
 
 dependability_analysis(
     name = "dependability_analysis",
+    fmea = [":fmea"],
     visibility = ["//visibility:public"],
 )
