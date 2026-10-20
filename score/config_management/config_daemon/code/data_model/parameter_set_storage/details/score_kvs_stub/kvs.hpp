@@ -30,8 +30,7 @@ struct InstanceId
     std::size_t id{0U};
 };
 
-// Stub for score-persistency's Kvs. Concrete so make_unique<Kvs>(unique_ptr<Kvs>) in
-// factory_mw_com_impl.cpp compiles. MockKvs subclasses and overrides the virtual methods for tests.
+// Stub for score-persistency's Kvs.
 class Kvs
 {
   public:
