@@ -14,8 +14,7 @@
 #include "score/config_management/config_daemon/code/data_model/details/parameter_set_impl.h"
 #include "score/config_management/config_daemon/code/data_model/details/common.h"
 #include "score/config_management/config_daemon/code/data_model/error/error.h"
-
-#include "score/json/json_writer.h"
+#include "platform/aas/config_management/lib/parameter_set_json_serializer/details/parameter_set_json_serializer_impl.h"
 
 namespace score
 {
@@ -26,10 +25,10 @@ namespace config_daemon
 namespace data_model
 {
 
-ParameterSet::ParameterSet(std::unique_ptr<json::IJsonWriter> json_writer)
+ParameterSet::ParameterSet()
     : logger_{mw::log::CreateLogger(std::string_view("DtMd"))},
       data_{},
-      json_writer_{std::move(json_writer)},
+      json_serializer_{std::make_unique<score::platform::config_management::ParameterSetJsonSerializerImpl>()},
       qualifier_{},
       is_calibratable_{false}
 {
@@ -97,13 +96,7 @@ Result<void> ParameterSet::Update(json::Object&& parameters)
 
 Result<score::cpp::pmr::string> ParameterSet::GetParameterSetAsString() const
 {
-    auto result = json_writer_->ToBuffer(GetParameterSetAsJson());
-    if (not result.has_value())
-    {
-        const auto error = result.error().Message();
-        return MakeUnexpected(DataModelError::kConvertingError, error);
-    }
-    return result.value().c_str();
+    return json_serializer_->SerializeParameterSet(GetParametersAsJson(), score::cpp::to_underlying(qualifier_));
 }
 
 Result<json::Any> ParameterSet::GetParameter(const score::cpp::string_view parameter_name)
@@ -121,15 +114,20 @@ Result<json::Any> ParameterSet::GetParameter(const score::cpp::string_view param
     }
 }
 
-json::Object ParameterSet::GetParameterSetAsJson() const
+json::Object ParameterSet::GetParametersAsJson() const
 {
-    json::Object parameter_set;
     json::Object parameters;
     for (const auto& parameter : data_)
     {
         parameters[parameter.first.c_str()] = parameter.second.GetValue().CloneByValue();
     }
-    parameter_set["parameters"] = std::move(parameters);
+    return parameters;
+}
+
+json::Object ParameterSet::GetParameterSetAsJson() const
+{
+    json::Object parameter_set;
+    parameter_set["parameters"] = GetParametersAsJson();
     json::Any qualifier{score::cpp::to_underlying(qualifier_)};
     parameter_set["qualifier"] = std::move(qualifier);
 

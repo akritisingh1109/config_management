@@ -28,5 +28,5 @@
 int main(const int argc, const char* argv[])
 {
     return score::mw::lifecycle::run_application<score::config_management::config_daemon::ConfigDaemon>(
-        argc, argv, std::make_unique<score::config_management::config_daemon::Factory>());
+        argc, argv, std::make_unique<score::config_management::config_daemon::FactoryImpl>());
 }

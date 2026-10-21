@@ -83,7 +83,7 @@ load_custom_targets()
 cc_test(
     name = "unit_test",
     srcs = select({
-        "//score/config_management/config_daemon/code:is_score_variant": ["parameter_set_storage_score_impl_test.cpp"],
+        "//platform/aas/config_management/flags:is_score_variant": ["parameter_set_storage_score_impl_test.cpp"],
         "//conditions:default": ["parameter_set_storage_impl_test.cpp"],
     }),
     features = COMMON_FEATURES,
@@ -96,7 +96,7 @@ cc_test(
         "@googletest//:gtest",
         "@score_logging//score/mw/log/test/console_logging_environment",
     ] + select({
-        "//score/config_management/config_daemon/code:is_score_variant": [
+        "//platform/aas/config_management/flags:is_score_variant": [
             ":details_score_for_unit_test",
             "@googletest//:gtest_main",
         ],

@@ -18,7 +18,10 @@ load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER
     cc_library(
         name = name,
         testonly = testonly,
-        srcs = ["plugin_collector_impl.cpp"],
+        srcs = select({
+            "//platform/aas/config_management/flags:is_score_variant": ["plugin_collector_impl_user.cpp"],
+            "//conditions:default": ["plugin_collector_impl.cpp"],
+        }),
         hdrs = [
             "plugin_collector_impl.h",
         ],
@@ -40,12 +43,13 @@ load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER
             [
                 "//score/config_management/config_daemon/code/plugins:plugin_creator",
             ] + select({
-                "//score/config_management/config_daemon/code:is_score_variant": [
+                "//platform/aas/config_management/flags:is_score_variant": [
                     "//score/config_management/config_daemon/code/plugins/demo_json/plugin_creator:demo_json_plugin_creator",
                 ],
                 "//conditions:default": [
                     "//score/config_management/config_daemon/code/plugins/coding/plugin_creator:coding_plugin_creator",
-                    "//score/config_management/config_daemon/code/plugins/calibration/plugin_creator:calibration_plugin_creator",
+                    "//score/config_management/config_daemon/code/plugins/calibration_loader/plugin_creator:calibration_loader_plugin_creator",
+                    "//score/config_management/config_daemon/code/plugins/runtime_calibration/plugin_creator:runtime_calibration_plugin_creator",
                 ],
             }),
         ),
@@ -56,14 +60,17 @@ load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER
                 "//score/config_management/config_daemon/code/plugins:mock",
                 "//score/config_management/config_daemon/code/plugins:plugin_creator_mock",
             ] + select({
-                "//score/config_management/config_daemon/code:is_score_variant": [
+                "//platform/aas/config_management/flags:is_score_variant": [
                     "//score/config_management/config_daemon/code/plugins/demo_json/plugin_creator:demo_json_plugin_creator",
                 ],
                 "//conditions:default": [
                     "//score/config_management/config_daemon/code/plugins/coding/plugin_creator:coding_plugin_creator_for_unit_test",
-                    "//score/config_management/config_daemon/code/plugins/calibration/plugin_creator:calibration_plugin_creator_for_unit_test",
-                    "//score/config_management/config_daemon/code/plugins/calibration/details:calibration_impl_for_test",
-                    "//score/config_management/config_daemon/code/plugins/calibration/factory/details:factory_impl_for_test",
+                    "//score/config_management/config_daemon/code/plugins/calibration_loader/plugin_creator:calibration_loader_plugin_creator_for_unit_test",
+                    "//score/config_management/config_daemon/code/plugins/calibration_loader/details:calibration_loader_plugin_impl_test",
+                    "//score/config_management/config_daemon/code/plugins/calibration_loader/factory/details:factory_impl_for_test",
+                    "//score/config_management/config_daemon/code/plugins/runtime_calibration/plugin_creator:runtime_calibration_plugin_creator_for_unit_test",
+                    "//score/config_management/config_daemon/code/plugins/runtime_calibration/details:runtime_calibration_plugin_impl_test",
+                    "//score/config_management/config_daemon/code/plugins/runtime_calibration/factory/details:factory_impl_for_test",
                 ],
             }),
         ),
@@ -72,7 +79,10 @@ load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER
 
 cc_test(
     name = "unit_test",
-    srcs = ["plugin_collector_impl_test.cpp"],
+    srcs = select({
+        "//platform/aas/config_management/flags:is_score_variant": ["plugin_collector_impl_test_user.cpp"],
+        "//conditions:default": ["plugin_collector_impl_test.cpp"],
+    }),
     features = COMPILER_WARNING_FEATURES,
     tags = ["unit"],
     visibility = ["//score/config_management/config_daemon:__subpackages__"],

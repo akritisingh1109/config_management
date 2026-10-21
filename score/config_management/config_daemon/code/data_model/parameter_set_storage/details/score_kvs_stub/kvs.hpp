@@ -31,12 +31,12 @@ struct InstanceId
 };
 
 // Stub for score-persistency's Kvs. Concrete so make_unique<Kvs>(unique_ptr<Kvs>) in
-// factory_mw_impl.cpp compiles. MockKvs subclasses and overrides the virtual methods for tests.
+// factory_mw_com_impl.cpp compiles. MockKvs subclasses and overrides the virtual methods for tests.
 class Kvs
 {
   public:
     Kvs() = default;
-    // Accepts a unique_ptr<Kvs> to match the real score-persistency API used in factory_mw_impl.cpp.
+    // Accepts a unique_ptr<Kvs> to match the real score-persistency API used in factory_mw_com_impl.cpp.
     explicit Kvs(std::unique_ptr<Kvs> /*inner*/) noexcept {}
     virtual ~Kvs() = default;
     Kvs(const Kvs&) = delete;

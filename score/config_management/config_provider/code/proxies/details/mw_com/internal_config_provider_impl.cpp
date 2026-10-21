@@ -13,8 +13,8 @@
 #include "score/config_management/config_provider/code/proxies/details/mw_com/internal_config_provider_impl.h"
 #include "score/config_management/config_provider/code/config_provider/error/error.h"
 
-#include "score/concurrency/future/interruptible_promise.h"
 #include "score/json/json_parser.h"
+#include "score/concurrency/future/interruptible_promise.h"
 
 #include <sstream>
 
@@ -86,17 +86,82 @@ InternalConfigProvider::~InternalConfigProvider() noexcept
     polling_thread_.reset();
     if (proxy_ != nullptr)  // LCOV_EXCL_BR_LINE (impossible to reach the false case in unit test)
     {
-        proxy_->last_updated_parameterset.Unsubscribe();
+        proxy_->last_updated_parameter_set.Unsubscribe();
     }
 }
 
 Result<json::Any> InternalConfigProvider::GetParameterSet(const std::string_view set_name,
-                                                          const std::chrono::milliseconds timeout) const
+                                                          const std::chrono::milliseconds timeout,
+                                                          const AdditionalShmSizing& sizing) const
 {
     logger_.LogDebug() << "InternalConfigProvider::" << __func__ << "[" << set_name << "]: timeout: " << timeout;
-    (void)set_name;
-    (void)timeout;
-    return {};
+
+    // Compared against sizing.max_name_length (computed from buffer_size_report.json), not a fixed constant:
+    // score::config_management::config_daemon::mw_com_icp_types::kMaxParameterSetNameSize only bounds the fixed-size
+    // last_updated_parameter_set EVENT (calibration-only); coding parameter set names routinely exceed it.
+    if (set_name.size() > sizing.max_name_length)
+    {
+        logger_.LogError() << "InternalConfigProvider::" << __func__ << ": set_name too long (" << set_name.size()
+                           << " > " << sizing.max_name_length << ")";
+        return MakeUnexpected(ConfigProviderError::kParameterSetNameTooLong);
+    }
+
+    std::unique_lock<std::mutex> lock{mutex_};
+    auto allocated_args = proxy_->get_parameter_set.Allocate();
+    if (!allocated_args.has_value())
+    {
+        logger_.LogError() << "InternalConfigProvider::" << __func__ << ": Could not allocate method args";
+        return MakeUnexpected(ConfigProviderError::kMethodArgumentAllocationFailed);
+    }
+
+    auto& [param_set_name_buffer, max_payload_size] = allocated_args.value();
+
+    if (param_set_name_buffer->Capacity() == 0U)
+    {
+        param_set_name_buffer->ReserveOnce(sizing.max_name_length);
+    }
+    else
+    {
+        param_set_name_buffer->Clear();
+    }
+    for (const auto c : set_name)
+    {
+        param_set_name_buffer->emplace_back(static_cast<std::uint8_t>(c));
+    }
+
+    *max_payload_size = sizing.max_payload_size;
+
+    auto get_result = proxy_->get_parameter_set(std::move(param_set_name_buffer), std::move(max_payload_size));
+    lock.unlock();
+
+    if (!get_result.has_value())
+    {
+        logger_.LogError() << "InternalConfigProvider::" << __func__ << ": get_parameter_set call failed";
+        return MakeUnexpected(ConfigProviderError::kGetParameterSetCallFailed);
+    }
+
+    // No nullptr check needed here: get_result.value() is a MethodReturnTypePtr referencing the return-value
+    // storage that was allocated for this call (via Allocate()/InitializeReturnValue()) before
+    // proxy_->get_parameter_set() was invoked. Since get_result.has_value() is true at this point, the mw::com binding
+    // guarantees this storage was successfully populated by the skeleton side, so dereferencing it is always safe on
+    // the success path.
+    const auto& result_array = *get_result.value();
+    const std::string_view result{reinterpret_cast<const char*>(result_array.Data()), result_array.size()};
+
+    if (result == score::config_management::config_daemon::mw_com_icp_types::kParameterSetNotFoundContent)
+    {
+        return MakeUnexpected(ConfigProviderError::kParameterSetNotFound);
+    }
+
+    if (result == score::config_management::config_daemon::mw_com_icp_types::kParameterSetPayloadTooLargeContent)
+    {
+        logger_.LogError() << "InternalConfigProvider::" << __func__ << ": parameter set '" << set_name
+                           << "' payload exceeds the allocated call_max_payload_size";
+        return MakeUnexpected(ConfigProviderError::kParameterSetPayloadTooLarge);
+    }
+
+    const json::JsonParser json_parser{};
+    return json_parser.FromBuffer(result);
 }
 
 bool InternalConfigProvider::TrySubscribeToLastUpdatedParameterSetEvent(const score::cpp::stop_token& stop_token,
@@ -105,7 +170,7 @@ bool InternalConfigProvider::TrySubscribeToLastUpdatedParameterSetEvent(const sc
     (void)stop_token;
     logger_.LogDebug() << "InternalConfigProvider::" << __func__;
     std::unique_lock<std::mutex> lock{mutex_};
-    score::cpp::ignore = proxy_->last_updated_parameterset.Subscribe(2);
+    score::cpp::ignore = proxy_->last_updated_parameter_set.Subscribe(2);
     on_changed_parameter_set_callback_ = std::move(callback);
 
     return true;
@@ -239,7 +304,7 @@ bool InternalConfigProvider::GetLastUpdatedParameterSetNewSamples()
     SCORE_LANGUAGE_FUTURECPP_PRECONDITION(max_samples_limit_ >= last_updated_parameter_set_names_.size());
     const std::size_t free_slots_in_samples_container = max_samples_limit_ - last_updated_parameter_set_names_.size();
     const auto get_new_samples_result =
-        proxy_->last_updated_parameterset.GetNewSamples(callback, free_slots_in_samples_container);
+        proxy_->last_updated_parameter_set.GetNewSamples(callback, free_slots_in_samples_container);
     if (not get_new_samples_result.has_value())
     {
         logger_.LogError() << "InternalConfigProvider::" << __func__

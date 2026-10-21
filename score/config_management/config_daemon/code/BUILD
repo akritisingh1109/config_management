@@ -11,25 +11,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_test")
+load("@rules_cc//cc:defs.bzl", "cc_test")
 load("@score_baselibs//:bazel/unit_tests.bzl", "cc_unit_test_suites_for_host_and_qnx")
 load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER_WARNING_FEATURES")
 load(":custom.bzl", "load_custom_targets", "load_custom_test_suites")
-
-bool_flag(
-    name = "score_variant",
-    build_setting_default = False,  # default is off, release variant used.
-)
-
-config_setting(
-    name = "is_score_variant",
-    flag_values = {":score_variant": "true"},
-    visibility = [
-        "//score/config_management/config_daemon:__subpackages__",
-        "//score/config_management/config_provider:__subpackages__",
-    ],
-)
 
 cc_test(
     name = "main_function_test",
@@ -42,13 +27,11 @@ cc_test(
     tags = ["unit"],
     deps = [
         "//score/config_management/config_daemon/code/app/details:app_for_unit_test",
-        "@score_lifecycle//score/launch_manager:mock_application_context_cc",
-        "@score_lifecycle//score/launch_manager:mock_lifecycle_cc",
-        "@score_lifecycle//score/launch_manager:runapplication_cc",
-    ] + select({
-        ":is_score_variant": ["//score/config_management/config_daemon/code/factory/details:mw_factory_for_unit_test"],
-        "//conditions:default": ["//score/config_management/config_daemon/code/factory/details:ara_factory_for_unit_test"],
-    }),
+        "//score/config_management/config_daemon/code/factory/details:factory_impl_for_unit_test",
+        "@score_lifecycle_health//score/launch_manager:applicationcontext_mock_cc",
+        "@score_lifecycle_health//score/launch_manager:lifecycle_mock_cc",
+        "@score_lifecycle_health//score/launch_manager:runapplication_cc",
+    ],
 )
 
 cc_unit_test_suites_for_host_and_qnx(
@@ -69,15 +52,3 @@ cc_unit_test_suites_for_host_and_qnx(
 )
 
 load_custom_targets()
-
-cc_binary(
-    name = "config_daemon",
-    srcs = ["main.cpp"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//score/config_management/config_daemon/code/app/details:app",
-        "//score/config_management/config_daemon/code/factory/details:mw_factory",
-        "@score_lifecycle//score/launch_manager:lifecyclemanager_cc",
-        "@score_lifecycle//score/launch_manager:runapplication_cc",
-    ],
-)

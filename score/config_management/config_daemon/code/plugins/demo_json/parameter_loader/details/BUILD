@@ -34,6 +34,7 @@ cc_gtest_unit_test(
         "//score/config_management/config_daemon/code/data_model/details:parameterset_collection_impl",
         "//score/config_management/config_daemon/code/data_model/error",
         "@score_baselibs//score/json:json_impl",
+        "@score_baselibs//score/json:json_parser",
         "@score_logging//score/mw/log/test/console_logging_environment",
     ],
 )
