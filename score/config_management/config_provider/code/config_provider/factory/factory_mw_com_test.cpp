@@ -121,6 +121,8 @@ TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_DefaultPolling_NoPersiste
         );
     // Expect that a valid ConfigProvider object still can be created.
     ASSERT_NE(nullptr, config_provider) << "Factory did not return a valid ConfigProvider object";
+    EXPECT_NE(nullptr, dynamic_cast<ConfigProviderImpl*>(config_provider.get()))
+        << "ConfigProvider object is not a ConfigProviderImpl instance";
 }
 
 TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_CustomPolling_NoPersistency)
@@ -144,6 +146,8 @@ TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_CustomPolling_NoPersisten
         );
     // Expect that a valid ConfigProvider object still can be created.
     ASSERT_NE(nullptr, config_provider) << "Factory did not return a valid ConfigProvider object";
+    EXPECT_NE(nullptr, dynamic_cast<ConfigProviderImpl*>(config_provider.get()))
+        << "ConfigProvider object is not a ConfigProviderImpl instance";
 }
 
 TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_DefaultPolling_Persistency)
@@ -166,6 +170,8 @@ TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_DefaultPolling_Persistenc
         );
     // Expect that a valid ConfigProvider object still can be created.
     ASSERT_NE(nullptr, config_provider) << "Factory did not return a valid ConfigProvider object";
+    EXPECT_NE(nullptr, dynamic_cast<ConfigProviderImpl*>(config_provider.get()))
+        << "ConfigProvider object is not a ConfigProviderImpl instance";
 }
 
 TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_CustomPolling_Persistency)
@@ -190,6 +196,8 @@ TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_CustomPolling_Persistency
         );
     // Expect that a valid ConfigProvider object still can be created.
     ASSERT_NE(nullptr, config_provider) << "Factory did not return a valid ConfigProvider object";
+    EXPECT_NE(nullptr, dynamic_cast<ConfigProviderImpl*>(config_provider.get()))
+        << "ConfigProvider object is not a ConfigProviderImpl instance";
 }
 
 TEST_F(ConfigProviderFactoryTest, FoundServiceDuringCreation)
@@ -246,6 +254,8 @@ TEST_F(ConfigProviderFactoryTest, CreateConfigProvider_MissingBufferSizeReport_F
     );
     // Then a valid ConfigProvider object is still created, using default buffer sizes instead of failing entirely.
     ASSERT_NE(nullptr, config_provider) << "Factory did not fall back to default buffer sizes as expected";
+    EXPECT_NE(nullptr, dynamic_cast<ConfigProviderImpl*>(config_provider.get()))
+        << "ConfigProvider object is not a ConfigProviderImpl instance";
 }
 
 }  // namespace test
