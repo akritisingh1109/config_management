@@ -62,9 +62,10 @@ TEST_F(ParameterSetStorageScoreImplTest, StoreParameterSetCollection_EmptyCollec
                    "hashes, and stores successfully via score KVS.");
 
     data_model::ParameterSetCollectionMock collection_mock{};
-    EXPECT_CALL(collection_mock, GetParameterSetCollectionAsJson()).WillOnce([]() -> score::Result<json::Object> {
-        return json::Object{};
-    });
+    EXPECT_CALL(collection_mock, GetParameterSetCollectionAsJson())
+        .WillOnce([]() -> score::Result<score::json::Object> {
+            return score::json::Object{};
+        });
 
     EXPECT_CALL(*kvs_mock_, set_value(kParameterSetHashKvsKey, ::testing::_)).WillOnce(Return(score::Result<void>{}));
     EXPECT_CALL(*kvs_mock_, flush()).WillOnce(Return(score::Result<void>{}));
@@ -82,9 +83,10 @@ TEST_F(ParameterSetStorageScoreImplTest, StoreParameterSetCollection_KvsSetValue
                    "when score KVS set_value fails.");
 
     data_model::ParameterSetCollectionMock collection_mock{};
-    EXPECT_CALL(collection_mock, GetParameterSetCollectionAsJson()).WillOnce([]() -> score::Result<json::Object> {
-        return json::Object{};
-    });
+    EXPECT_CALL(collection_mock, GetParameterSetCollectionAsJson())
+        .WillOnce([]() -> score::Result<score::json::Object> {
+            return score::json::Object{};
+        });
 
     EXPECT_CALL(*kvs_mock_, set_value(kParameterSetHashKvsKey, ::testing::_))
         .WillOnce(Return(score::MakeUnexpected(ParameterSetStorageError::kUnableToSaveToPersistency)));
@@ -103,9 +105,10 @@ TEST_F(ParameterSetStorageScoreImplTest, StoreParameterSetCollection_KvsFlushFai
                    "when score KVS flush fails.");
 
     data_model::ParameterSetCollectionMock collection_mock{};
-    EXPECT_CALL(collection_mock, GetParameterSetCollectionAsJson()).WillOnce([]() -> score::Result<json::Object> {
-        return json::Object{};
-    });
+    EXPECT_CALL(collection_mock, GetParameterSetCollectionAsJson())
+        .WillOnce([]() -> score::Result<score::json::Object> {
+            return score::json::Object{};
+        });
 
     EXPECT_CALL(*kvs_mock_, set_value(kParameterSetHashKvsKey, ::testing::_)).WillOnce(Return(score::Result<void>{}));
     EXPECT_CALL(*kvs_mock_, flush())

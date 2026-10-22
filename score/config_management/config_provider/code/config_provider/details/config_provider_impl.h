@@ -14,16 +14,17 @@
 #define SCORE_CONFIG_MANAGEMENT_CONFIG_PROVIDER_CODE_CONFIG_PROVIDER_DETAILS_CONFIG_PROVIDER_IMPL_H
 
 #include "score/config_management/config_provider/code/config_provider/config_provider.h"
+#include "score/config_management/config_provider/code/config_provider/factory/buffer_size_report.h"
 #include "score/config_management/config_provider/code/config_provider/initial_qualifier_state_types.h"
 #include "score/config_management/config_provider/code/parameter_set/parameter_set.h"
 #include "score/config_management/config_provider/code/persistency/persistency.h"
 #include "score/config_management/config_provider/code/proxies/internal_config_provider.h"
 
-#include "score/memory/string_comparison_adaptor.h"
 #include "score/mw/log/logger.h"
 
-#include "score/concurrency/condition_variable.h"
 #include "score/mw/service/proxy_data.h"
+#include "score/concurrency/condition_variable.h"
+#include "score/string_manipulation/string_comparison_adaptor.h"
 
 #include <score/jthread.hpp>
 #include <score/memory.hpp>
@@ -86,15 +87,15 @@ class ConfigProviderImpl final : public ConfigProvider
 
     bool IsAwaitingProxyConnection() const noexcept;
 
-    ConfigProviderImpl(
-        mw::service::OptionalProxyData<IInternalConfigProvider> proxy_data,
-        score::cpp::stop_token user_stop_token,
-        score::cpp::pmr::memory_resource* const memory_resource,
-        score::cpp::optional<std::size_t> max_samples_limit,
-        score::cpp::optional<std::chrono::milliseconds> polling_cycle_interval,
-        IsAvailableNotificationCallback callback,
-        score::cpp::pmr::unique_ptr<Persistency> persistency,
-        score::cpp::optional<score::cpp::pmr::vector<std::string_view>> initial_parameter_set_name_list = score::cpp::nullopt);
+    ConfigProviderImpl(mw::service::OptionalProxyData<IInternalConfigProvider> proxy_data,
+                       score::cpp::stop_token user_stop_token,
+                       score::cpp::pmr::memory_resource* const memory_resource,
+                       score::cpp::optional<std::size_t> max_samples_limit,
+                       score::cpp::optional<std::chrono::milliseconds> polling_cycle_interval,
+                       IsAvailableNotificationCallback callback,
+                       score::cpp::pmr::unique_ptr<Persistency> persistency,
+                       score::cpp::optional<score::cpp::pmr::vector<std::string_view>> initial_parameter_set_name_list = score::cpp::nullopt,
+                       AdditionalShmSizing sizing = AdditionalShmSizing{});
 
   private:
     void SetupInternalConfigProvider(std::shared_ptr<IInternalConfigProvider> internal_config_provider,
@@ -117,8 +118,9 @@ class ConfigProviderImpl final : public ConfigProvider
     InitialQualifierState initial_qualifier_state_;
     score::cpp::pmr::memory_resource* const memory_resource_;
     std::shared_ptr<IInternalConfigProvider> internal_config_provider_;
+    AdditionalShmSizing sizing_;
     mutable std::mutex mutex_;
-    concurrency::InterruptibleConditionalVariable internal_config_provider_cv_;
+    score::concurrency::InterruptibleConditionalVariable internal_config_provider_cv_;
     score::cpp::pmr::unique_ptr<Persistency> persistency_;
     ClientHandlersMap client_handlers_;
     score::cpp::optional<std::size_t> max_samples_limit_;

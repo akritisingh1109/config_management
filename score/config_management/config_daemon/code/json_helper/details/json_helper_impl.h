@@ -38,18 +38,18 @@ class JsonHelper final : public IJsonHelper
     JsonHelper& operator=(JsonHelper&&) = delete;
     JsonHelper& operator=(const JsonHelper&) = delete;
 
-    std::shared_ptr<json::IJsonParser> GetJsonParser() const noexcept override;
-    std::shared_ptr<json::IJsonWriter> GetJsonWriter() const noexcept override;
-    std::shared_ptr<json::IJsonWriter> GetJsonSyncedWriter() const noexcept override;
-    std::shared_ptr<filesystem::IStandardFilesystem> GetStandardFilesystem() const noexcept override;
-    std::shared_ptr<filesystem::IFileFactory> GetFileFactory() const noexcept override;
+    std::shared_ptr<score::json::IJsonParser> GetJsonParser() const noexcept override;
+    std::shared_ptr<score::json::IJsonWriter> GetJsonWriter() const noexcept override;
+    std::shared_ptr<score::json::IJsonWriter> GetJsonSyncedWriter() const noexcept override;
+    std::shared_ptr<score::filesystem::IStandardFilesystem> GetStandardFilesystem() const noexcept override;
+    std::shared_ptr<score::filesystem::IFileFactory> GetFileFactory() const noexcept override;
 
   private:
-    std::shared_ptr<json::IJsonParser> json_parser_;
-    std::shared_ptr<json::IJsonWriter> json_writer_;
-    std::shared_ptr<json::IJsonWriter> json_synced_writer_;
-    std::shared_ptr<filesystem::IStandardFilesystem> standart_filesystem_;
-    std::shared_ptr<filesystem::IFileFactory> file_factory_;
+    std::shared_ptr<score::json::IJsonParser> json_parser_;
+    std::shared_ptr<score::json::IJsonWriter> json_writer_;
+    std::shared_ptr<score::json::IJsonWriter> json_synced_writer_;
+    std::shared_ptr<score::filesystem::IStandardFilesystem> standart_filesystem_;
+    std::shared_ptr<score::filesystem::IFileFactory> file_factory_;
 };
 
 }  // namespace common

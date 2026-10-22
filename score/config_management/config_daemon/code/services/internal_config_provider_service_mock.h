@@ -24,7 +24,7 @@ namespace config_management
 {
 namespace config_daemon
 {
-class InternalConfigProviderServiceMock final : public IInternalConfigProviderService
+class InternalConfigProviderServiceMock : public IInternalConfigProviderService
 {
   public:
     InternalConfigProviderServiceMock() = default;
@@ -34,8 +34,8 @@ class InternalConfigProviderServiceMock final : public IInternalConfigProviderSe
     InternalConfigProviderServiceMock& operator=(const InternalConfigProviderServiceMock&) noexcept = delete;
     virtual ~InternalConfigProviderServiceMock() noexcept = default;
 
-    MOCK_METHOD(void, StartService, (), (override));
-    MOCK_METHOD(void, StopService, (), (override));
+    MOCK_METHOD(Result<void>, Start, (), (override));
+    MOCK_METHOD(void, Stop, (), (noexcept, override));
 
     MOCK_METHOD(void, SetInitialQualifierState, (const InitialQualifierState), (noexcept, override));
     MOCK_METHOD(bool, SendLastUpdatedParameterSet, (const std::string_view), (noexcept, override));

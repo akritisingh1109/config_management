@@ -37,7 +37,7 @@ class IPlugin
     IPlugin& operator=(const IPlugin&) = delete;
     virtual ~IPlugin() = default;
 
-    virtual Result<void> Initialize() = 0;
+    virtual score::Result<void> Initialize() = 0;
     virtual void Deinitialize() noexcept = 0;
 
     virtual std::int32_t Run(
@@ -47,7 +47,7 @@ class IPlugin
         score::cpp::stop_token stop_token,
         std::shared_ptr<fault_event_reporter::IFaultEventReporter> fault_event_reporter) = 0;
 
-    virtual Result<void> ParameterSetCollectionUpdateStart(data_model::IParameterSetCollection&) = 0;
+    virtual score::Result<void> ParameterSetCollectionUpdateStart(data_model::IParameterSetCollection&) = 0;
 };
 
 }  // namespace config_daemon

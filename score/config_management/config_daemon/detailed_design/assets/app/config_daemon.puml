@@ -16,7 +16,7 @@ class ConfigDaemon {
   --
   - logger_ : mw::log::Logger&
   - parameterset_collection_ : std::shared_ptr<data_model::IParameterSetCollection>
-  - provided_services_container_ : mw::service::ProvidedServiceContainer
+  - provided_services_container_ : mw::service::ProvidedServicesContainer
   - factory_ : std::unique_ptr<IFactory>
   - plugins_ : std::vector<std::shared_ptr<IPlugin>>
   - fault_event_reporter_ : std::shared_ptr<fault_event_reporter::IFaultEventReporter>

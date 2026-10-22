@@ -14,6 +14,7 @@ cc_library(
     deps = [
         "//score/config_management/config_provider:config_provider_interface",
         "//score/config_management/config_provider/code/config_provider/error",
+        "//score/config_management/config_provider/code/config_provider/factory:buffer_size_report",
         "@score_baselibs//score/json",
         "@score_baselibs//score/language/futurecpp",
     ],

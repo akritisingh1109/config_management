@@ -25,7 +25,7 @@ namespace config_management
 namespace config_daemon
 {
 
-class FactoryMock final : public IFactory
+class FactoryMock final : public Factory
 {
   public:
     FactoryMock();
@@ -35,17 +35,17 @@ class FactoryMock final : public IFactory
     FactoryMock& operator=(FactoryMock&&) = delete;
     FactoryMock& operator=(const FactoryMock&) = delete;
 
-    MOCK_METHOD(mw::service::ProvidedServiceContainer,
+    MOCK_METHOD(mw::service::ProvidedServicesContainer,
                 CreateInternalConfigProviderService,
                 (const std::shared_ptr<data_model::IParameterSetCollection>),
                 (const, override));
     MOCK_METHOD(LastUpdatedParameterSetSender,
                 CreateLastUpdatedParameterSetSender,
-                (mw::service::ProvidedServiceContainer & services),
+                (mw::service::ProvidedServicesContainer & services),
                 (override));
     MOCK_METHOD(InitialQualifierStateSender,
                 CreateInitialQualifierStateSender,
-                (mw::service::ProvidedServiceContainer & services),
+                (mw::service::ProvidedServicesContainer & services),
                 (override));
 
     MOCK_METHOD(std::shared_ptr<data_model::IParameterSetCollectionManager>,

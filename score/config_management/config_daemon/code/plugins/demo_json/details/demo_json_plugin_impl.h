@@ -15,9 +15,9 @@
 
 #include "score/config_management/config_daemon/code/plugins/demo_json/parameter_loader/demo_parameter_loader.h"
 #include "score/config_management/config_daemon/code/plugins/plugin.h"
+#include "score/mw/log/logger.h"
 #include "score/json/i_json_parser.h"
 #include "score/json/json_parser.h"
-#include "score/mw/log/logger.h"
 
 #include <memory>
 
@@ -44,7 +44,7 @@ class DemoJsonPluginImpl final : public IPlugin
 
     ~DemoJsonPluginImpl() noexcept override = default;
 
-    Result<void> Initialize() override;
+    score::Result<void> Initialize() override;
     void Deinitialize() noexcept override;
 
     std::int32_t Run(std::shared_ptr<data_model::IParameterSetCollectionManager> parameterset_collection_manager,
@@ -53,7 +53,7 @@ class DemoJsonPluginImpl final : public IPlugin
                      score::cpp::stop_token stop_token,
                      std::shared_ptr<fault_event_reporter::IFaultEventReporter> fault_event_reporter) override;
 
-    Result<void> ParameterSetCollectionUpdateStart(
+    score::Result<void> ParameterSetCollectionUpdateStart(
         data_model::IParameterSetCollection& parameter_set_collection) override;
 
   private:

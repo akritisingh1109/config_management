@@ -16,8 +16,8 @@
 
 #include "score/config_management/config_daemon/code/data_model/parameterset_collection.h"
 
-#include "score/result/result.h"
 #include "score/mw/log/logger.h"
+#include "score/result/result.h"
 
 #include <score/optional.hpp>
 #include <score/string.hpp>
@@ -46,24 +46,25 @@ class ParameterSetCollection final : public IParameterSetCollection
     ParameterSetCollection& operator=(ParameterSetCollection&&) = delete;
     ParameterSetCollection& operator=(const ParameterSetCollection&) = delete;
 
-    Result<void> Insert(const score::cpp::string_view set_name,
-                        const score::cpp::string_view parameter_name,
-                        json::Any&& parameter_value) noexcept override;
-    Result<json::Any> GetParameterFromSet(const score::cpp::string_view set_name,
-                                          const score::cpp::string_view parameter_name) const override;
-    Result<score::cpp::pmr::string> GetParameterSet(const std::string_view set_name) const override;
-    Result<void> UpdateParameterSet(const score::cpp::string_view set_name, const score::cpp::string_view set) override;
+    score::Result<void> Insert(const score::cpp::string_view set_name,
+                               const score::cpp::string_view parameter_name,
+                               score::json::Any&& parameter_value) noexcept override;
+    score::Result<score::json::Any> GetParameterFromSet(const score::cpp::string_view set_name,
+                                                        const score::cpp::string_view parameter_name) const override;
+    score::Result<score::cpp::pmr::string> GetParameterSet(const std::string_view set_name) const override;
+    score::Result<void> UpdateParameterSet(const score::cpp::string_view set_name, const score::cpp::string_view set) override;
     bool SetCalibratable(const score::cpp::string_view set_name, const bool is_calibratable) const noexcept override;
 
     score::Result<score::config_management::config_daemon::ParameterSetQualifier> GetParameterSetQualifier(
         const score::cpp::string_view set_name) const override;
-    Result<void> SetParameterSetQualifier(const score::cpp::string_view set_name,
-                                          const score::config_management::config_daemon::ParameterSetQualifier qualifier) override;
+    score::Result<void> SetParameterSetQualifier(
+        const score::cpp::string_view set_name,
+        const score::config_management::config_daemon::ParameterSetQualifier qualifier) override;
 
-    score::Result<json::Object> GetParameterSetCollectionAsJson() const noexcept override;
+    score::Result<score::json::Object> GetParameterSetCollectionAsJson() const noexcept override;
 
   private:
-    Result<std::shared_ptr<ParameterSet>> Find(const std::string_view set_name) const noexcept;
+    score::Result<std::shared_ptr<ParameterSet>> Find(const std::string_view set_name) const noexcept;
 
     mw::log::Logger& logger_;
     mutable std::mutex mutex_;

@@ -80,7 +80,7 @@ TEST_F(InternalConfigProviderReactorTest, GetParameterSetFailsWithKeyNotFound)
     const std::string param_set_name = "non_existent_parameter_set";
 
     EXPECT_CALL(*parameterset_collection_mock_, GetParameterSet(param_set_name))
-        .WillOnce(Return(MakeUnexpected(data_model::DataModelError::kParameterSetNotFound)));
+        .WillOnce(Return(score::MakeUnexpected(data_model::DataModelError::kParameterSetNotFound)));
 
     InternalConfigProviderServiceReactorImpl reactor{parameterset_collection_mock_};
     auto result = reactor.GetParameterSet(param_set_name);

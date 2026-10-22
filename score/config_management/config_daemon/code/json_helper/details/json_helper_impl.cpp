@@ -28,31 +28,31 @@ namespace common
 
 JsonHelper::JsonHelper()
     : IJsonHelper{},
-      json_parser_{std::make_shared<json::JsonParser>()},
-      json_writer_{std::make_shared<json::JsonWriter>()},
-      json_synced_writer_{std::make_shared<json::JsonWriter>(json::FileSyncMode::kSynced)},
-      standart_filesystem_{std::make_shared<filesystem::StandardFilesystem>()},
-      file_factory_{std::make_shared<filesystem::FileFactory>()}
+      json_parser_{std::make_shared<score::json::JsonParser>()},
+      json_writer_{std::make_shared<score::json::JsonWriter>()},
+      json_synced_writer_{std::make_shared<score::json::JsonWriter>(score::json::FileSyncMode::kSynced)},
+      standart_filesystem_{std::make_shared<score::filesystem::StandardFilesystem>()},
+      file_factory_{std::make_shared<score::filesystem::FileFactory>()}
 {
 }
 
-std::shared_ptr<json::IJsonParser> JsonHelper::GetJsonParser() const noexcept
+std::shared_ptr<score::json::IJsonParser> JsonHelper::GetJsonParser() const noexcept
 {
     return json_parser_;
 }
-std::shared_ptr<json::IJsonWriter> JsonHelper::GetJsonWriter() const noexcept
+std::shared_ptr<score::json::IJsonWriter> JsonHelper::GetJsonWriter() const noexcept
 {
     return json_writer_;
 }
-std::shared_ptr<json::IJsonWriter> JsonHelper::GetJsonSyncedWriter() const noexcept
+std::shared_ptr<score::json::IJsonWriter> JsonHelper::GetJsonSyncedWriter() const noexcept
 {
     return json_synced_writer_;
 }
-std::shared_ptr<filesystem::IStandardFilesystem> JsonHelper::GetStandardFilesystem() const noexcept
+std::shared_ptr<score::filesystem::IStandardFilesystem> JsonHelper::GetStandardFilesystem() const noexcept
 {
     return standart_filesystem_;
 }
-std::shared_ptr<filesystem::IFileFactory> JsonHelper::GetFileFactory() const noexcept
+std::shared_ptr<score::filesystem::IFileFactory> JsonHelper::GetFileFactory() const noexcept
 {
     return file_factory_;
 }

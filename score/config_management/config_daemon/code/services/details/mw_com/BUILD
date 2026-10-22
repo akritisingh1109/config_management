@@ -17,7 +17,7 @@ load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER
         deps = [
             "//score/config_management/config_daemon/code/data_model/error",
             "//score/config_management/config_daemon/code/services",
-            "//score/config_management/config_daemon/code/services/details/mw_com/generated_service:internal_config_provider_type",
+            "//score/config_management/lib/mw_com_types:internal_config_provider_type",
             "@score_logging//score/mw/log",
         ] + dep,
     )
@@ -25,10 +25,10 @@ load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER
         (
             "_impl",
             [
-                "@score_baselibs//score/result",
-                "@score_communication//score/mw/com",
                 "//score/config_management/config_daemon/code/services:internal_config_provider_reactor",
                 "//score/config_management/config_daemon/code/data_model/parameterset_collection_interfaces:read_only_parameterset_collection",
+                "@score_baselibs//score/result",
+                "@score_communication//score/mw/com",
             ],
             False,
         ),
@@ -43,22 +43,12 @@ load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER
     ]
 ]
 
-filegroup(
-    name = "mw_com_config",
-    srcs = ["mw_com_config.json"],
-    visibility = [
-        "//score/config_management/config_daemon/code:__subpackages__",
-        "//score/config_management/config_daemon/test:__subpackages__",
-        "//visibility:public",
-    ],
-)
-
 cc_test(
     name = "unit_test",
     srcs = [
         "internal_config_provider_service_impl_test.cpp",
     ],
-    data = [":mw_com_config"],
+    data = ["//score/config_management/config_daemon/config:mw_com_config"],
     features = COMPILER_WARNING_FEATURES + [
         "aborts_upon_exception",
     ],

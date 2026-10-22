@@ -33,7 +33,7 @@ constexpr const std::int32_t kExitCodeFailure{1};
 
 }  // namespace
 
-ConfigDaemon::ConfigDaemon(std::unique_ptr<IFactory> factory) noexcept
+ConfigDaemon::ConfigDaemon(std::unique_ptr<Factory> factory) noexcept
     : IConfigDaemon{},
       logger_{mw::log::CreateLogger(std::string_view{"App"})},
       factory_{std::move(factory)},
@@ -43,7 +43,7 @@ ConfigDaemon::ConfigDaemon(std::unique_ptr<IFactory> factory) noexcept
 {
     logger_.LogDebug() << "ConfigDaemon::" << __func__;
     // 0x7F(hexadecimal) is equivalent to 0177(octal) in UNix permissions
-    const auto result = os::Stat::instance().umask(os::IntegerToMode(0x7FU));
+    const auto result = score::os::Stat::instance().umask(score::os::IntegerToMode(0x7FU));
     if (not result.has_value())
     {
         logger_.LogError() << "ConfigDaemon::" << __func__
@@ -93,15 +93,6 @@ std::int32_t ConfigDaemon::Initialize(const ApplicationContext& context)
         }
     }
 
-    provided_services_container_ =
-        factory_->CreateInternalConfigProviderService(parameterset_collection_manager_->GetParameterSetCollection());
-    if (provided_services_container_.NumServices() == 0U)
-    {
-        logger_.LogError() << "ConfigDaemon::" << __func__
-                           << "ProviderServicesContainer doesn't contain any InternalConfigProviderService";
-        return kExitCodeFailure;
-    }
-
     return kExitCodeSuccess;
 }
 
@@ -113,18 +104,6 @@ std::int32_t ConfigDaemon::Run(const score::cpp::stop_token& token)
     if (!load_result.has_value())
     {
         logger_.LogError() << "ConfigDaemon::" << __func__ << ": Failed to load ParameterSetCollection from storage";
-    }
-
-    logger_.LogInfo() << "ConfigDaemon::" << __func__ << "InternalConfigProviderService offered.";
-    provided_services_container_.StartServices();
-
-    if (load_result.has_value())
-    {
-        auto initial_qualifier_state_sender = factory_->CreateInitialQualifierStateSender(provided_services_container_);
-        if (!initial_qualifier_state_sender.empty())
-        {
-            initial_qualifier_state_sender(load_result.value());
-        }
     }
 
     score::utils::ScopeExit<> deinitialize_plugin_instance([this, &logger = logger_]() noexcept {
@@ -141,6 +120,26 @@ std::int32_t ConfigDaemon::Run(const score::cpp::stop_token& token)
             // LCOV_EXCL_STOP
         }
     });
+
+    provided_services_container_ =
+        factory_->CreateInternalConfigProviderService(parameterset_collection_manager_->GetParameterSetCollection());
+    if (provided_services_container_.Size() == 0U)
+    {
+        logger_.LogError() << "ConfigDaemon::" << __func__
+                           << "ProviderServicesContainer doesn't contain any InternalConfigProviderService";
+        return kExitCodeFailure;
+    }
+
+    logger_.LogInfo() << "ConfigDaemon::" << __func__ << "InternalConfigProviderService offered.";
+    if (load_result.has_value())
+    {
+        auto initial_qualifier_state_sender = factory_->CreateInitialQualifierStateSender(provided_services_container_);
+        if (!initial_qualifier_state_sender.empty())
+        {
+            initial_qualifier_state_sender(load_result.value());
+        }
+    }
+
     for (const auto& plugin : plugins_)
     {
         // LCOV_EXCL_START Can't be covered by unit tests. It has already been checked for nullptr
@@ -184,7 +183,7 @@ std::int32_t ConfigDaemon::Run(const score::cpp::stop_token& token)
     score::concurrency::wait_until_stop_requested(token);
 
     logger_.LogInfo() << "ConfigDaemon::" << __func__ << "Stop requested";
-    provided_services_container_.StopServices();
+    provided_services_container_.StopAll();
 
     return kExitCodeSuccess;
 }

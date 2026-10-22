@@ -44,9 +44,10 @@ score::Result<void> Ok()
 
 score::Result<void> Err()
 {
-    return score::Result<void>{score::unexpect,
-                             score::config_management::config_daemon::data_model::MakeError(
-                                 score::config_management::config_daemon::data_model::DataModelError::kParsingError, "unit-test")};
+    return score::Result<void>{
+        score::unexpect,
+        score::config_management::config_daemon::data_model::MakeError(
+            score::config_management::config_daemon::data_model::DataModelError::kParsingError, "unit-test")};
 }
 
 TEST(DemoParameterLoaderImplTest, LoadsParametersIntoDataModel)
@@ -89,7 +90,7 @@ TEST(DemoParameterLoaderImplTest, LoadParameterDataFailsOnNullCollection)
 
 TEST(DemoParameterLoaderImplTest, LoadParameterDataFailsOnNullJsonResult)
 {
-    score::Result<json::Any> demo_data{};
+    score::Result<score::json::Any> demo_data{};
     DemoParameterLoaderImpl loader{std::move(demo_data)};
     auto collection = std::make_shared<data_model::ParameterSetCollection>();
 

@@ -33,7 +33,7 @@ enum class ParameterSetStorageError : score::result::ErrorCode
     kUnableToSaveToPersistency,
 };
 
-/// @brief ADL overload to fulfill design requirements from lib/result
+/// @brief ADL overload to fulfill design requirements from score/result
 score::result::Error MakeError(const ParameterSetStorageError code, const std::string_view user_message = "") noexcept;
 
 }  // namespace data_model

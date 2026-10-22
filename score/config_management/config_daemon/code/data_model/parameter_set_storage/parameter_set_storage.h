@@ -46,8 +46,8 @@ class IParameterSetStorage
     /// (where applicable) storing the flash counter copy.
     ///
     /// @param collection  The collection to persist.
-    /// @return Result<void> on success, error on failure.
-    virtual Result<void> StoreParameterSetCollection(IParameterSetCollection& collection) noexcept = 0;
+    /// @return score::Result<void> on success, error on failure.
+    virtual score::Result<void> StoreParameterSetCollection(IParameterSetCollection& collection) noexcept = 0;
 
     /// @brief Load the parameter set collection from persistent storage on startup.
     ///
@@ -59,10 +59,10 @@ class IParameterSetStorage
     /// to DefaultParameterSetCollection.json on any integrity failure.
     ///
     /// @param collection  The in-memory collection to populate.
-    /// @return Result<bool>: true if ParameterSetCollection.json was loaded (kQualifying),
+    /// @return score::Result<bool>: true if ParameterSetCollection.json was loaded (kQualifying),
     ///         false if DefaultParameterSetCollection.json was loaded (kDefault),
     ///         or an error on unrecoverable failure (e.g. flash counter unreadable).
-    virtual Result<bool> LoadParameterSetCollection(IParameterSetCollection& collection) noexcept = 0;
+    virtual score::Result<bool> LoadParameterSetCollection(IParameterSetCollection& collection) noexcept = 0;
 };
 }  // namespace data_model
 }  // namespace config_daemon

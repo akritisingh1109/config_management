@@ -37,7 +37,7 @@ ParameterSetCollectionManager::ParameterSetCollectionManager(
 {
 }
 
-Result<InitialQualifierState> ParameterSetCollectionManager::LoadParameterSetCollectionFromStorage() noexcept
+score::Result<InitialQualifierState> ParameterSetCollectionManager::LoadParameterSetCollectionFromStorage() noexcept
 {
     if (storage_ == nullptr)
     {
@@ -52,7 +52,7 @@ Result<InitialQualifierState> ParameterSetCollectionManager::LoadParameterSetCol
                            << ": Failed to load ParameterSetCollection: " << load_result.error()
                            << "; falling back to default data";
         return score::MakeUnexpected(DataModelError::kFailedToLoadParameterSetCollectionJson,
-                                   "Failed to load ParameterSetCollection");
+                                     "Failed to load ParameterSetCollection");
     }
 
     const bool actual_data_loaded = load_result.value();
@@ -84,7 +84,7 @@ std::shared_ptr<IParameterSetCollection> ParameterSetCollectionManager::GetParam
     return primary_collection_;
 }
 
-Result<void> ParameterSetCollectionManager::ParameterSetCollectionUpdateRequest()
+score::Result<void> ParameterSetCollectionManager::ParameterSetCollectionUpdateRequest()
 {
     logger_.LogInfo() << "ParameterSetCollectionManager::" << __func__ << ": Starting update procedure";
 
@@ -96,7 +96,7 @@ Result<void> ParameterSetCollectionManager::ParameterSetCollectionUpdateRequest(
         logger_.LogError() << "ParameterSetCollectionManager::" << __func__
                            << ": Failed to update ParameterSetCollection with error: " << result.error();
         return score::MakeUnexpected(DataModelError::kFailedToUpdateParameterSetCollectionJson,
-                                   "Failed to update ParameterSetCollection");
+                                     "Failed to update ParameterSetCollection");
     }
 
     if (storage_ != nullptr)
@@ -107,7 +107,7 @@ Result<void> ParameterSetCollectionManager::ParameterSetCollectionUpdateRequest(
             logger_.LogError() << "ParameterSetCollectionManager::" << __func__
                                << ": Failed to persist ParameterSetCollection with error: " << store_result.error();
             return score::MakeUnexpected(DataModelError::kFailedToUpdateParameterSetCollectionJson,
-                                       "Failed to persist ParameterSetCollection");
+                                         "Failed to persist ParameterSetCollection");
         }
     }
 
@@ -115,14 +115,14 @@ Result<void> ParameterSetCollectionManager::ParameterSetCollectionUpdateRequest(
     return {};
 }
 
-Result<void> ParameterSetCollectionManager::NotifyPluginsToUpdate(ParameterSetCollection& temporary_collection)
+score::Result<void> ParameterSetCollectionManager::NotifyPluginsToUpdate(ParameterSetCollection& temporary_collection)
 {
     if (plugins_.empty())
     {
         logger_.LogError() << "ParameterSetCollectionManager::" << __func__
                            << ": No plugins available to update ParameterSetCollection";
         return score::MakeUnexpected(DataModelError::kFailedToUpdateParameterSetCollectionJson,
-                                   "No plugins available to update ParameterSetCollection");
+                                     "No plugins available to update ParameterSetCollection");
     }
 
     // Plugins are in dependency order: primary plugin always before dependent plugin.
@@ -136,7 +136,7 @@ Result<void> ParameterSetCollectionManager::NotifyPluginsToUpdate(ParameterSetCo
         {
             logger_.LogError() << "ParameterSetCollectionManager::" << __func__ << ": Plugin expired";
             return score::MakeUnexpected(DataModelError::kFailedToUpdateParameterSetCollectionJson,
-                                       "Plugin expired during ParameterSetCollection update");
+                                         "Plugin expired during ParameterSetCollection update");
         }
         auto update_result = plugin->ParameterSetCollectionUpdateStart(temporary_collection);
         if (update_result.has_value() == false)
@@ -144,7 +144,7 @@ Result<void> ParameterSetCollectionManager::NotifyPluginsToUpdate(ParameterSetCo
             logger_.LogError() << "ParameterSetCollectionManager::" << __func__
                                << ": Failed to update ParameterSetCollection with error: " << update_result.error();
             return score::MakeUnexpected(DataModelError::kFailedToUpdateParameterSetCollectionJson,
-                                       "Failed to update ParameterSetCollection");
+                                         "Failed to update ParameterSetCollection");
         }
     }
 

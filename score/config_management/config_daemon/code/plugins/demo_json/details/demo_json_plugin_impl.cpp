@@ -14,8 +14,8 @@
 
 #include "score/config_management/config_daemon/code/plugins/demo_json/parameter_loader/details/demo_parameter_loader_impl.h"
 
-#include "score/json/json_parser.h"
 #include "score/mw/log/logging.h"
+#include "score/json/json_parser.h"
 
 #include <cstdlib>
 #include <memory>
@@ -39,7 +39,7 @@ DemoJsonPluginImpl::DemoJsonPluginImpl(std::unique_ptr<score::json::IJsonParser>
     logger_.LogInfo() << "DemoJson::" << __func__ << "- Created";
 }
 
-Result<void> DemoJsonPluginImpl::Initialize()
+score::Result<void> DemoJsonPluginImpl::Initialize()
 {
     return {};
 }
@@ -72,7 +72,7 @@ std::int32_t DemoJsonPluginImpl::Run(
     return EXIT_SUCCESS;
 }
 
-Result<void> DemoJsonPluginImpl::ParameterSetCollectionUpdateStart(
+score::Result<void> DemoJsonPluginImpl::ParameterSetCollectionUpdateStart(
     data_model::IParameterSetCollection& parameter_set_collection)
 {
     score::cpp::ignore = parameter_set_collection;

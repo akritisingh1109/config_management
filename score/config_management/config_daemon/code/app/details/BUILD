@@ -13,7 +13,6 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER_WARNING_FEATURES")
-load("@score_tooling//bazel/rules/rules_score:rules_score.bzl", "unit")
 
 cc_library(
     name = "app",
@@ -31,6 +30,7 @@ cc_library(
         "//score/config_management/config_daemon/code/data_model/details:parameterset_collection_manager_impl",
         "//score/config_management/config_daemon/code/factory:interface",
         "@score_baselibs//score/concurrency:interruptible_wait",
+        "@score_baselibs//score/json",
         "@score_baselibs//score/scope_exit",
         "@score_lifecycle//score/launch_manager:application_cc",
         "@score_logging//score/mw/log",
@@ -52,6 +52,8 @@ cc_library(
         "//score/config_management/config_daemon/code/data_model/details:parameterset_collection_manager_impl",
         "//score/config_management/config_daemon/code/factory:interface_for_unit_test",
         "//score/config_management/config_daemon/code/fault_event_reporter",
+        "@score_baselibs//score/concurrency:interruptible_wait",
+        "@score_baselibs//score/json",
         "@score_baselibs//score/scope_exit",
         "@score_lifecycle//score/launch_manager:application_cc",
         "@score_lifecycle//score/launch_manager:mock_application_context_cc",
@@ -83,16 +85,8 @@ cc_test(
         "@googletest//:gtest_main",
         "@score_baselibs//score/os/mocklib:stat_mock",
         "@score_communication//score/mw/service:factory",
-        "@score_communication//score/mw/service:provided_service_container",
+        "@score_communication//score/mw/service:provided_services_container",
         "@score_lifecycle//score/launch_manager:applicationcontext_cc",
         "@score_lifecycle//score/launch_manager:mock_lifecycle_cc",
     ],
-)
-
-unit(
-    name = "config_daemon_app_unit",
-    tests = [":unit_test"],
-    unit_design = [],
-    visibility = ["//score/config_management/dependability:__pkg__"],
-    implementation = [":app"],
 )

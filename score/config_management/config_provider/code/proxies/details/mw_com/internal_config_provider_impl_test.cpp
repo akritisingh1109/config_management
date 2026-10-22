@@ -11,7 +11,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // *******************************************************************************
 #include "score/config_management/config_provider/code/proxies/details/mw_com/internal_config_provider_impl.h"
-#include "score/config_management/config_provider/code/proxies/details/mw_com/generated_service/internal_config_provider_type.h"
+#include "score/config_management/lib/mw_com_types/internal_config_provider_type.h"
 
 #include "score/config_management/config_provider/code/config_provider/error/error.h"
 
@@ -25,6 +25,7 @@
 #include <future>
 
 #include <iostream>
+#include <stdexcept>
 
 namespace score
 {
@@ -39,7 +40,7 @@ namespace
 const std::chrono::milliseconds kZeroTimeout{0};
 
 const std::string kICPSpecifier{"ConfigDaemonCustomer/ConfigDaemonCustomer_RootSwc/InternalConfigProviderAppRPort"};
-using MwComSkeleton = score::config_management::config_daemon::InternalConfigProviderSkeleton;
+using MwComSkeleton = score::mw::com::AsSkeleton<score::config_management::config_daemon::InternalConfigProviderInterface>;
 using MwComInitialQualifierStateType = score::config_management::config_daemon::mw_com_icp_types::InitialQualifierState;
 
 class InternalConfigProviderTest : public ::testing::Test
@@ -50,12 +51,19 @@ class InternalConfigProviderTest : public ::testing::Test
     void SetUp() override
     {
         score::mw::com::runtime::RuntimeConfiguration runtime_configuration{
-            "./score/config_management/config_provider/code/proxies/details/mw_com/mw_com_config.json"};
+            "./score/config_management/config_provider/code/proxies/details/mw_com/"
+            "test_mw_com_config.json"};
         score::mw::com::runtime::InitializeRuntime(runtime_configuration);
 
         skeleton_ = CreateService();
+
         std::ignore = skeleton_->initial_qualifier_state.Update(MwComInitialQualifierStateType::kUndefined);
-        score::cpp::ignore = skeleton_->OfferService();
+        auto offer_result = skeleton_->OfferService();
+        if (!offer_result.has_value())
+        {
+            throw std::runtime_error(std::string("OfferService() failed: ") +
+                                     std::string(offer_result.error().Message()));
+        }
         auto proxy = CreateProxy();
         // proxy_mock_ = proxy.get();
         unit_ = std::make_unique<InternalConfigProvider>(std::move(proxy));
@@ -76,6 +84,14 @@ class InternalConfigProviderTest : public ::testing::Test
         auto service_result = MwComSkeleton::Create(std::move(instance_specifier_result).value());
         // ASSERT_TRUE(service_result.has_value());
         auto& service = service_result.value();
+        // The generated skeleton requires every declared method to have a registered handler before
+        // OfferService() is called, otherwise SkeletonBase::VerifyAllMethodsRegistered() silently fails
+        // with a generic kBindingFailure. This test does not exercise get_parameter_set() itself, so a
+        // minimal handler that never resolves anything is sufficient to satisfy that precondition.
+        auto handler = [](score::config_management::config_daemon::mw_com_icp_types::ParameterSetContent&,
+                          const score::config_management::config_daemon::mw_com_icp_types::ParameterSetName&,
+                          const std::size_t&) {};
+        std::ignore = service.get_parameter_set.RegisterHandler(std::move(handler));
         return std::make_unique<MwComSkeleton>(std::move(service));
     }
 
@@ -83,9 +99,12 @@ class InternalConfigProviderTest : public ::testing::Test
     {
         auto instance_specifier_result = score::mw::com::InstanceSpecifier::Create(std::string(kICPSpecifier));
 
-        // EXPECT_TRUE(result.has_value());
         const auto proxy_handles_result = MWProxy::FindService(std::move(instance_specifier_result).value());
         const auto& proxy_handles = proxy_handles_result.value();
+        if (proxy_handles.empty())
+        {
+            throw std::runtime_error("FindService() did not return any service handles for " + kICPSpecifier);
+        }
 
         return std::make_unique<MWProxy>(MWProxy::Create(proxy_handles.front()).value());
     }

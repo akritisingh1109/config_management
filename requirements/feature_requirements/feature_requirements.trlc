@@ -123,6 +123,7 @@ ScoreReq.FeatReq ParameterInitialQualifier {
 ScoreReq.FeatReq ParameterSetAquisitionAvailability {
     description = "Parameter set acquisition method shall be used in a controlled way to prevent any application termination as cause of communication misconfiguration."
     safety = ScoreReq.Asil.QM
+    // Todo: Should derive from Communication.Dependability.Safety.MonotonicSemiDynamicMemoryAllocation@1.
     derived_from = [AssumedSystemRequirements.SafeConfiguration@1]
     version = 1
 }
@@ -139,6 +140,7 @@ ScoreReq.FeatReq CompleteParameterSets {
 /* broken_link_c/issue/24399695 */
 ScoreReq.FeatReq SupportedPrimitiveParameterTypes {
     description = """The following primitive parameter types shall be supported for parameters:
+    * {{bool}}
     * {{sint8}}
     * {{sint16}}
     * {{sint32}}

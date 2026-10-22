@@ -16,15 +16,16 @@
 
 #include "score/config_management/config_daemon/code/data_model/details/parameter_impl.h"
 #include "score/config_management/config_daemon/code/data_model/parameter_set_qualifier.h"
+#include "score/config_management/lib/parameter_set_json_serializer/parameter_set_json_serializer.h"
 
-#include "score/json/i_json_writer.h"
-#include "score/json/internal/model/any.h"
 #include "score/mw/log/logger.h"
+#include "score/json/internal/model/any.h"
 
 #include <score/optional.hpp>
 #include <score/string.hpp>
 #include <score/string_view.hpp>
 
+#include <memory>
 #include <mutex>
 #include <unordered_map>
 
@@ -40,7 +41,7 @@ namespace data_model
 class ParameterSet final
 {
   public:
-    explicit ParameterSet(std::unique_ptr<json::IJsonWriter> json_writer);
+    ParameterSet();
 
     ~ParameterSet() = default;
     ParameterSet(ParameterSet&&) = delete;
@@ -49,19 +50,21 @@ class ParameterSet final
     ParameterSet& operator=(ParameterSet&&) = delete;
     ParameterSet& operator=(const ParameterSet&) = delete;
 
-    Result<score::cpp::pmr::string> GetParameterSetAsString() const;
-    json::Object GetParameterSetAsJson() const;
-    Result<void> Add(const score::cpp::string_view parameter_name, json::Any&& parameter_value);
-    Result<void> Update(json::Object&& parameters);
+    score::Result<score::cpp::pmr::string> GetParameterSetAsString() const;
+    score::json::Object GetParameterSetAsJson() const;
+    score::Result<void> Add(const score::cpp::string_view parameter_name, score::json::Any&& parameter_value);
+    score::Result<void> Update(score::json::Object&& parameters);
     void SetCalibratable(const bool is_calibratable);
     void SetQualifier(const score::config_management::config_daemon::ParameterSetQualifier qualifier);
     score::config_management::config_daemon::ParameterSetQualifier GetQualifier() const;
-    Result<json::Any> GetParameter(const score::cpp::string_view parameter_name);
+    score::Result<score::json::Any> GetParameter(const score::cpp::string_view parameter_name);
 
   private:
+    score::json::Object GetParametersAsJson() const;
+
     mw::log::Logger& logger_;
     std::unordered_map<score::cpp::pmr::string, Parameter> data_;
-    std::unique_ptr<json::IJsonWriter> json_writer_;
+    std::unique_ptr<score::config_management::ParameterSetJsonSerializer> json_serializer_;
     score::config_management::config_daemon::ParameterSetQualifier qualifier_;
     bool is_calibratable_;
 };

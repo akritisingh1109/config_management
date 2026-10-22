@@ -154,23 +154,25 @@ class ConfigProviderTest : public ::testing::Test
                     return true;
                 }));
         EXPECT_CALL(*icp_mock_,
-                    GetParameterSet(StringViewCompare(set_name), ConfigProviderImpl::kDefaultResponseTimeout))
-            .WillRepeatedly(
-                Invoke([&content](const std::string_view, const std::chrono::milliseconds) -> Result<json::Any> {
-                    if (content.has_value())
-                    {
-                        auto temp = content.value().CloneByValue();
-                        return Result<json::Any>{std::move(temp)};
-                    }
-                    return Unexpected{content.error()};
-                }));
+                    GetParameterSet(StringViewCompare(set_name), ConfigProviderImpl::kDefaultResponseTimeout, _))
+            .WillRepeatedly(Invoke([&content](const std::string_view,
+                                              const std::chrono::milliseconds,
+                                              const AdditionalShmSizing&) -> Result<json::Any> {
+                if (content.has_value())
+                {
+                    auto temp = content.value().CloneByValue();
+                    return Result<json::Any>{std::move(temp)};
+                }
+                return Unexpected{content.error()};
+            }));
 
-        EXPECT_CALL(*icp_mock_,
-                    GetParameterSet(StringViewCompare("wrong_set_name"), ConfigProviderImpl::kDefaultResponseTimeout))
+        EXPECT_CALL(
+            *icp_mock_,
+            GetParameterSet(StringViewCompare("wrong_set_name"), ConfigProviderImpl::kDefaultResponseTimeout, _))
             .WillRepeatedly(Return(ByMove(MakeUnexpected(ConfigProviderError::kProxyReturnedNoResult))));
         EXPECT_CALL(
             *icp_mock_,
-            GetParameterSet(StringViewCompare("invalid_parameter_set"), ConfigProviderImpl::kDefaultResponseTimeout))
+            GetParameterSet(StringViewCompare("invalid_parameter_set"), ConfigProviderImpl::kDefaultResponseTimeout, _))
             .WillRepeatedly(Return(ByMove(Result<json::Any>{json::Any{}})));
 
         EXPECT_CALL(*icp_mock_, GetInitialQualifierState(ConfigProviderImpl::kDefaultResponseTimeout))
@@ -219,10 +221,10 @@ class ConfigProviderTest : public ::testing::Test
         score::config_management::config_daemon::ParameterSetQualifier::kQualified;
     const score::config_management::config_daemon::ParameterSetQualifier parameter_qualifier_from_persistency_ =
         score::config_management::config_daemon::ParameterSetQualifier::kUnqualified;
-    concurrency::InterruptiblePromise<std::unique_ptr<IInternalConfigProvider>> promise_;
+    score::concurrency::InterruptiblePromise<std::unique_ptr<IInternalConfigProvider>> promise_;
     std::shared_ptr<const ParameterSet> persisted_cache_set_;
     std::atomic<bool> is_available_{false};
-    concurrency::InterruptibleConditionalVariable is_available_cv_;
+    score::concurrency::InterruptibleConditionalVariable is_available_cv_;
     std::mutex is_available_mutex_;
     InternalConfigProviderMock* icp_mock_{nullptr};
     score::cpp::stop_source stop_source_;
@@ -768,7 +770,7 @@ TEST_F(ConfigProviderTest, SubscribeBeforeGettingDataFromProxy)
         EXPECT_CALL(*icp_mock_, TrySubscribeToLastUpdatedParameterSetEvent(_, _)).WillOnce(Return(true));
         EXPECT_CALL(
             *icp_mock_,
-            GetParameterSet(StringViewCompare(parameter_set_name_), ConfigProviderImpl::kDefaultResponseTimeout))
+            GetParameterSet(StringViewCompare(parameter_set_name_), ConfigProviderImpl::kDefaultResponseTimeout, _))
             .Times(1);
     }
 
@@ -799,10 +801,10 @@ TEST_F(ConfigProviderTest, FailedToSubscribe)
     EXPECT_CALL(*icp_mock_, TrySubscribeToLastUpdatedParameterSetEvent(_, _)).WillOnce(Return(false));
 
     // Then GetParameterSet should not be called since subscription failed
-    EXPECT_CALL(*icp_mock_, GetParameterSet(_, _)).Times(0);
+    EXPECT_CALL(*icp_mock_, GetParameterSet(_, _, _)).Times(0);
 
     score::cpp::stop_source test_stop_source{};
-    concurrency::Notification thread_running, thread_finished;
+    score::concurrency::Notification thread_running, thread_finished;
     // When client thread tries to wait for proxy
     score::cpp::jthread client_thread{[&]() {
         thread_running.notify();
@@ -837,11 +839,11 @@ TEST_F(ConfigProviderTest, SubscribeWithEmptyCallback)
     promise_.SetValue(std::move(internal_config_provider));
     EXPECT_CALL(*icp_mock_, TrySubscribeToLastUpdatedParameterSetEvent(_, _)).WillOnce(Return(true));
     EXPECT_CALL(*icp_mock_,
-                GetParameterSet(StringViewCompare(parameter_set_name_), ConfigProviderImpl::kDefaultResponseTimeout))
+                GetParameterSet(StringViewCompare(parameter_set_name_), ConfigProviderImpl::kDefaultResponseTimeout, _))
         .Times(1);
 
     score::cpp::stop_source test_stop_source{};
-    concurrency::Notification thread_running, thread_finished;
+    score::concurrency::Notification thread_running, thread_finished;
     // When client thread creates ConfigProvider with empty callback
     score::cpp::jthread client_thread{[&]() {
         thread_running.notify();
@@ -963,7 +965,7 @@ TEST_F(ConfigProviderTest, Success_LastUpdatedParameterSetReceiveHandlerCalledFo
     )");
     // When proxy returns parameter set updates
     EXPECT_CALL(*icp_mock_,
-                GetParameterSet(StringViewCompare(parameter_set_name_), ConfigProviderImpl::kDefaultResponseTimeout))
+                GetParameterSet(StringViewCompare(parameter_set_name_), ConfigProviderImpl::kDefaultResponseTimeout, _))
         .Times(2)
         .WillOnce(Return(ByMove(std::move(json_result_1))))
         .WillOnce(Return(ByMove(std::move(json_result_2))));
@@ -1017,7 +1019,8 @@ TEST_F(ConfigProviderTest, Success_LastUpdatedParameterSetReceiveHandlerCalledTw
     const std::string set_name = parameter_set_name_;
 
     // When proxy returns two different parameter set values
-    EXPECT_CALL(*icp_mock_, GetParameterSet(StringViewCompare(set_name), ConfigProviderImpl::kDefaultResponseTimeout))
+    EXPECT_CALL(*icp_mock_,
+                GetParameterSet(StringViewCompare(set_name), ConfigProviderImpl::kDefaultResponseTimeout, _))
         .Times(2)
         .WillOnce(Return(ByMove(std::move(json_result_1))))
         .WillOnce(Return(ByMove(std::move(json_result_2))));
@@ -1078,9 +1081,11 @@ TEST_F(ConfigProviderTest, Success_LastUpdatedParameterSetReceiveHandlerCalledTw
     const std::string set_name_2 = "set_name_2";
 
     // When proxy returns two different parameter sets
-    EXPECT_CALL(*icp_mock_, GetParameterSet(StringViewCompare(set_name_1), ConfigProviderImpl::kDefaultResponseTimeout))
+    EXPECT_CALL(*icp_mock_,
+                GetParameterSet(StringViewCompare(set_name_1), ConfigProviderImpl::kDefaultResponseTimeout, _))
         .WillOnce(Return(ByMove(std::move(json_result_1))));
-    EXPECT_CALL(*icp_mock_, GetParameterSet(StringViewCompare(set_name_2), ConfigProviderImpl::kDefaultResponseTimeout))
+    EXPECT_CALL(*icp_mock_,
+                GetParameterSet(StringViewCompare(set_name_2), ConfigProviderImpl::kDefaultResponseTimeout, _))
         .WillOnce(Return(ByMove(std::move(json_result_2))));
     auto config_provider = CreateConfigProviderWithAvailableCallback([this]() noexcept {
         UnblockMakeProxyAvailable();
@@ -1281,7 +1286,7 @@ TEST_F(ConfigProviderTest, SuccessLastUpdatedParameterSetPersistedInCache)
     BlockUntilProxyIsReady(stop_source_.get_token());
     // When an updated parameter set is received from proxy
     EXPECT_CALL(*icp_mock_,
-                GetParameterSet(StringViewCompare(parameter_set_name_), ConfigProviderImpl::kDefaultResponseTimeout))
+                GetParameterSet(StringViewCompare(parameter_set_name_), ConfigProviderImpl::kDefaultResponseTimeout, _))
         .WillOnce(Return(ByMove(std::move(updated_parameter_set_from_proxy_))));
 
     // Then callback is invoked and parameter set is cached with new values
@@ -1419,7 +1424,7 @@ TEST_F(ConfigProviderTest, Test_FailLastUpdatedParameterSetReceiveHandler)
     ASSERT_NE(registered_on_changed_parameter_set_callback_, nullptr);
     // When the registered_on_changed_parameter_set_callback_ is called with not registered name
     // Then GetParameterSet function would not triggered
-    EXPECT_CALL(*icp_mock_, GetParameterSet(std::string_view(parameter_set_name_), _)).Times(0);
+    EXPECT_CALL(*icp_mock_, GetParameterSet(std::string_view(parameter_set_name_), _, _)).Times(0);
     registered_on_changed_parameter_set_callback_(parameter_set_name_);
 }
 
@@ -1448,7 +1453,7 @@ TEST_F(ConfigProviderTest, LastUpdatedParameterSetFailedGetParameterSet)
     ASSERT_NE(registered_on_changed_parameter_set_callback_, nullptr);
     // When the registered_on_changed_parameter_set_callback_ is called with registered name
     // Then GetParameterSet function would be triggered with this name
-    EXPECT_CALL(*icp_mock_, GetParameterSet(std::string_view(parameter_set_name_), _))
+    EXPECT_CALL(*icp_mock_, GetParameterSet(std::string_view(parameter_set_name_), _, _))
         .WillOnce(Return(ByMove(MakeUnexpected(ConfigProviderError::kProxyReturnedNoResult))));
     registered_on_changed_parameter_set_callback_(parameter_set_name_);
 }
@@ -1496,12 +1501,12 @@ TEST_F(ConfigProviderTest, GetParameterSetsByNameList_WithProxy)
 
     // Then GetParameterSetsByNameList would get cached value for "parameter_set_name_"
     auto json_result = json::JsonParser{}.FromBuffer(R"({"parameters":{"parameter_name":123},"qualifier":1})");
-    EXPECT_CALL(*icp_mock_, GetParameterSet(StringViewCompare("new_set"), _))
+    EXPECT_CALL(*icp_mock_, GetParameterSet(StringViewCompare("new_set"), _, _))
         .WillOnce(Return(ByMove(std::move(json_result))));
 
     // Then GetParameterSet would get error for "missing_set" which is a key not existing in persistency nor
     // retrievable from proxy
-    EXPECT_CALL(*icp_mock_, GetParameterSet(StringViewCompare("missing_set"), _))
+    EXPECT_CALL(*icp_mock_, GetParameterSet(StringViewCompare("missing_set"), _, _))
         .WillOnce(
             Return(ByMove(MakeUnexpected(ConfigProviderError::kParameterSetNotFound, "Parameter set not found"))));
 
@@ -1547,12 +1552,12 @@ TEST_F(ConfigProviderTest, GetParameterSetsByNameList_ConcurrentAccess)
     BlockUntilProxyIsReady(stop_source_.get_token());
 
     auto json_result = json::JsonParser{}.FromBuffer(R"({"parameters":{"parameter_name":123},"qualifier":1})");
-    EXPECT_CALL(*icp_mock_, GetParameterSet(StringViewCompare("new_set"), _))
-        .WillRepeatedly(Invoke([](const std::string_view, const std::chrono::milliseconds) {
+    EXPECT_CALL(*icp_mock_, GetParameterSet(StringViewCompare("new_set"), _, _))
+        .WillRepeatedly(Invoke([](const std::string_view, const std::chrono::milliseconds, const AdditionalShmSizing&) {
             return json::JsonParser{}.FromBuffer(R"({"parameters":{"parameter_name":123},"qualifier":1})");
         }));
-    EXPECT_CALL(*icp_mock_, GetParameterSet(StringViewCompare("missing_set"), _))
-        .WillRepeatedly(Invoke([](const std::string_view, const std::chrono::milliseconds) {
+    EXPECT_CALL(*icp_mock_, GetParameterSet(StringViewCompare("missing_set"), _, _))
+        .WillRepeatedly(Invoke([](const std::string_view, const std::chrono::milliseconds, const AdditionalShmSizing&) {
             return MakeUnexpected(ConfigProviderError::kParameterSetNotFound, "Parameter set not found");
         }));
 

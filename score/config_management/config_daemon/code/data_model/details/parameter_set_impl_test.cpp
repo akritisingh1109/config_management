@@ -14,10 +14,8 @@
 #include "score/config_management/config_daemon/code/data_model/details/parameter_set_impl.h"
 #include "score/config_management/config_daemon/code/data_model/error/error.h"
 
-#include "score/json/i_json_writer_mock.h"
 #include "score/json/internal/model/any.h"
 #include "score/json/json_parser.h"
-#include "score/json/json_writer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -34,31 +32,19 @@ namespace data_model
 namespace test
 {
 
-using testing::_;
-using testing::Matcher;
-using testing::Return;
-
 class ParameterSetFixture : public ::testing::Test
 {
   public:
     void SetUp() override
     {
-        auto json_writer = std::make_unique<json::IJsonWriterMock>();
-        json_writer_mock = json_writer.get();
-        ON_CALL(*json_writer_mock, ToBuffer(Matcher<const json::Object&>(_)))
-            .WillByDefault([this](const json::Object& obj) -> Result<std::string> {
-                return json_writer_actual.ToBuffer(obj);
-            });
-        parameter_set = std::make_unique<ParameterSet>(std::move(json_writer));
+        parameter_set = std::make_unique<ParameterSet>();
 
-        std::ignore = parameter_set->Add("foo", json::Any{42U});
-        std::ignore = parameter_set->Add("bar", json::Any{69420U});
+        std::ignore = parameter_set->Add("foo", score::json::Any{42U});
+        std::ignore = parameter_set->Add("bar", score::json::Any{69420U});
         parameter_set->SetCalibratable(true);
     }
 
     std::unique_ptr<ParameterSet> parameter_set;
-    json::IJsonWriterMock* json_writer_mock;
-    json::JsonWriter json_writer_actual;
 };
 
 TEST_F(ParameterSetFixture, SetAndGetParameterSetQualifier)
@@ -85,13 +71,24 @@ TEST_F(ParameterSetFixture, GetParameterSetAsString_Pass)
     RecordProperty("Description",
                    "Verifies that GetParameterSetAsString will return JSON formatted representation of parameter set");
 
-    const auto* const expected = R"({
-    "parameters": {
-        "bar": 69420,
-        "foo": 42
-    },
-    "qualifier": 0
-})";
+    const auto* const expected = R"({"parameters":{"bar":69420,"foo":42},"qualifier":0})";
+
+    EXPECT_STREQ(parameter_set->GetParameterSetAsString().value().c_str(), expected);
+}
+
+TEST_F(ParameterSetFixture, GetParameterSetAsString_ContainsQualifier)
+{
+    RecordProperty("Priority", "3");
+    RecordProperty("DerivationTechnique", "Analysis of equivalence classes and boundary values");
+    RecordProperty("TestType", "Interface test");
+    RecordProperty("Verifies", "::score::config_management::config_daemon::data_model::ParameterSet::GetParameterSetAsString");
+    RecordProperty(
+        "Description",
+        "Verifies that GetParameterSetAsString emits the numeric underlying value of the currently set qualifier.");
+
+    parameter_set->SetQualifier(ParameterSetQualifier::kQualifying);
+
+    const auto* const expected = R"({"parameters":{"bar":69420,"foo":42},"qualifier":4})";
 
     EXPECT_STREQ(parameter_set->GetParameterSetAsString().value().c_str(), expected);
 }
@@ -104,34 +101,14 @@ TEST_F(ParameterSetFixture, Add_NoUpdateToExistingValue)
     RecordProperty("Verifies", "::score::config_management::config_daemon::data_model::ParameterSet::Add");
     RecordProperty("Description", "Verifies that Add method won't update already existing parameter value");
 
-    auto add_result = parameter_set->Add("foo", json::Any{43U});
+    auto add_result = parameter_set->Add("foo", score::json::Any{43U});
     ASSERT_FALSE(add_result.has_value());
-    EXPECT_EQ(add_result,
-              MakeUnexpected(DataModelError::kParameterAlreadyExists, "Parameter already exist in parameter set"));
-    const auto* const expected = R"({
-    "parameters": {
-        "bar": 69420,
-        "foo": 42
-    },
-    "qualifier": 0
-})";
+    EXPECT_EQ(
+        add_result,
+        score::MakeUnexpected(DataModelError::kParameterAlreadyExists, "Parameter already exist in parameter set"));
+    const auto* const expected = R"({"parameters":{"bar":69420,"foo":42},"qualifier":0})";
 
     EXPECT_STREQ(parameter_set->GetParameterSetAsString().value().c_str(), expected);
-}
-
-TEST_F(ParameterSetFixture, GetParameterSetAsString_Fail_Json)
-{
-    RecordProperty("Priority", "3");
-    RecordProperty("DerivationTechnique", "Analysis of equivalence classes and boundary values");
-    RecordProperty("TestType", "Interface test");
-    RecordProperty("Verifies", "::score::config_management::config_daemon::data_model::ParameterSet::GetParameterSetAsString");
-    RecordProperty("Description",
-                   "Verifies that GetParameterSetAsString method will return an error, when JSON writer fails");
-
-    EXPECT_CALL(*json_writer_mock, ToBuffer(Matcher<const json::Object&>(_)))
-        .WillOnce(Return(MakeUnexpected<score::json::Error>(score::json::Error::kInvalidFilePath)));
-    EXPECT_EQ(parameter_set->GetParameterSetAsString().error(),
-              MakeUnexpected<DataModelError>(DataModelError::kConvertingError).error());
 }
 
 TEST_F(ParameterSetFixture, Update_Pass)
@@ -149,18 +126,13 @@ TEST_F(ParameterSetFixture, Update_Pass)
     "foo": 2137
 })";
 
-    const json::JsonParser json_parser{};
+    const score::json::JsonParser json_parser{};
     auto parsing_result = json_parser.FromBuffer(updated_set);
 
-    const std::string expected = R"({
-    "parameters": {
-        "bar": 31337,
-        "foo": 2137
-    },
-    "qualifier": 0
-})";
+    const std::string expected = R"({"parameters":{"bar":31337,"foo":2137},"qualifier":0})";
 
-    EXPECT_TRUE(parameter_set->Update(std::move(parsing_result.value().As<json::Object>().value().get())).has_value());
+    EXPECT_TRUE(
+        parameter_set->Update(std::move(parsing_result.value().As<score::json::Object>().value().get())).has_value());
     EXPECT_STREQ(parameter_set->GetParameterSetAsString().value().c_str(), expected.c_str());
 }
 
@@ -180,19 +152,14 @@ TEST_F(ParameterSetFixture, Update_Fail_NotCalibratable)
     "foo": 2137
 })";
 
-    const std::string expected = R"({
-    "parameters": {
-        "bar": 69420,
-        "foo": 42
-    },
-    "qualifier": 0
-})";
+    const std::string expected = R"({"parameters":{"bar":69420,"foo":42},"qualifier":0})";
 
-    const json::JsonParser json_parser{};
+    const score::json::JsonParser json_parser{};
     auto parsing_result = json_parser.FromBuffer(updated_set);
 
-    EXPECT_EQ(parameter_set->Update(std::move(parsing_result.value().As<json::Object>().value().get())).error(),
-              MakeUnexpected(DataModelError::kParameterSetNotCalibratable, "ParameterSet is not calibratable").error());
+    EXPECT_EQ(parameter_set->Update(std::move(parsing_result.value().As<score::json::Object>().value().get())).error(),
+              score::MakeUnexpected(DataModelError::kParameterSetNotCalibratable, "ParameterSet is not calibratable")
+                  .error());
     EXPECT_STREQ(parameter_set->GetParameterSetAsString().value().c_str(), expected.c_str());
 }
 
@@ -209,19 +176,13 @@ TEST_F(ParameterSetFixture, Update_Fail_ParameterDoesNotExist)
     "baz": 58008
 })";
 
-    const json::JsonParser json_parser{};
+    const score::json::JsonParser json_parser{};
     auto parsing_result = json_parser.FromBuffer(updated_set);
 
-    const std::string expected = R"({
-    "parameters": {
-        "bar": 69420,
-        "foo": 42
-    },
-    "qualifier": 0
-})";
+    const std::string expected = R"({"parameters":{"bar":69420,"foo":42},"qualifier":0})";
 
-    EXPECT_EQ(parameter_set->Update(std::move(parsing_result.value().As<json::Object>().value().get())).error(),
-              MakeUnexpected(DataModelError::kParametersNotFound, "Some parameters are not found").error());
+    EXPECT_EQ(parameter_set->Update(std::move(parsing_result.value().As<score::json::Object>().value().get())).error(),
+              score::MakeUnexpected(DataModelError::kParametersNotFound, "Some parameters are not found").error());
     EXPECT_STREQ(parameter_set->GetParameterSetAsString().value().c_str(), expected.c_str());
 }
 }  // namespace test

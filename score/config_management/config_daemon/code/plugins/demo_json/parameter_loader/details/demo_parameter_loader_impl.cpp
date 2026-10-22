@@ -36,7 +36,7 @@ constexpr auto kParametersKey = "parameters";
 constexpr auto kInitValueKey = "initValue";
 }  // namespace
 
-DemoParameterLoaderImpl::DemoParameterLoaderImpl(score::Result<json::Any>&& demo_parameters_data)
+DemoParameterLoaderImpl::DemoParameterLoaderImpl(score::Result<score::json::Any>&& demo_parameters_data)
     : demo_parameters_data_{std::move(demo_parameters_data)}, logger_{mw::log::CreateLogger(std::string_view{"DemP"})}
 {
 }

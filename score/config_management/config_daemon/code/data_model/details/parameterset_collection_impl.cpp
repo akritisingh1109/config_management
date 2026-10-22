@@ -34,9 +34,9 @@ ParameterSetCollection::ParameterSetCollection() noexcept
 {
 }
 
-Result<void> ParameterSetCollection::Insert(const score::cpp::string_view set_name,
-                                            const score::cpp::string_view parameter_name,
-                                            json::Any&& parameter_value) noexcept
+score::Result<void> ParameterSetCollection::Insert(const score::cpp::string_view set_name,
+                                                   const score::cpp::string_view parameter_name,
+                                                   score::json::Any&& parameter_value) noexcept
 {
     logger_.LogDebug() << "ParameterSetCollection::" << __func__ << "set_name:" << set_name
                        << "parameter_name:" << parameter_name;
@@ -52,14 +52,14 @@ Result<void> ParameterSetCollection::Insert(const score::cpp::string_view set_na
     }
     else
     {
-        parameter_set = std::make_shared<ParameterSet>(std::make_unique<json::JsonWriter>());
+        parameter_set = std::make_shared<ParameterSet>();
         score::cpp::ignore = parameter_sets_.emplace(AsString(set_name), parameter_set);
     }
 
     return parameter_set->Add(parameter_name, std::move(parameter_value));
 }
 
-Result<score::cpp::pmr::string> ParameterSetCollection::GetParameterSet(const std::string_view set_name) const
+score::Result<score::cpp::pmr::string> ParameterSetCollection::GetParameterSet(const std::string_view set_name) const
 {
     const std::lock_guard<std::mutex> lock{mutex_};
 
@@ -68,11 +68,11 @@ Result<score::cpp::pmr::string> ParameterSetCollection::GetParameterSet(const st
     {
         return parameter_set.value()->GetParameterSetAsString();
     }
-    return MakeUnexpected<score::cpp::pmr::string>(parameter_set.error());
+    return score::MakeUnexpected<score::cpp::pmr::string>(parameter_set.error());
 }
 
-Result<json::Any> ParameterSetCollection::GetParameterFromSet(const score::cpp::string_view set_name,
-                                                              const score::cpp::string_view parameter_name) const
+score::Result<score::json::Any> ParameterSetCollection::GetParameterFromSet(const score::cpp::string_view set_name,
+                                                                            const score::cpp::string_view parameter_name) const
 {
     const std::lock_guard<std::mutex> lock{mutex_};
 
@@ -81,10 +81,11 @@ Result<json::Any> ParameterSetCollection::GetParameterFromSet(const score::cpp::
     {
         return parameter_set.value()->GetParameter(parameter_name);
     }
-    return MakeUnexpected<json::Any>(parameter_set.error());
+    return score::MakeUnexpected<score::json::Any>(parameter_set.error());
 }
 
-Result<std::shared_ptr<ParameterSet>> ParameterSetCollection::Find(const std::string_view set_name) const noexcept
+score::Result<std::shared_ptr<ParameterSet>> ParameterSetCollection::Find(
+    const std::string_view set_name) const noexcept
 {
     logger_.LogDebug() << "ParameterSetCollection::" << __func__;
 
@@ -93,17 +94,18 @@ Result<std::shared_ptr<ParameterSet>> ParameterSetCollection::Find(const std::st
     {
         logger_.LogWarn() << "ParameterSetCollection::" << __func__ << "ParameterSet with name:" << set_name
                           << "doesn't exist";
-        return MakeUnexpected(DataModelError::kParameterSetNotFound);
+        return score::MakeUnexpected(DataModelError::kParameterSetNotFound);
     }
 
     return result->second;
 }
 
-Result<void> ParameterSetCollection::UpdateParameterSet(const score::cpp::string_view set_name, const score::cpp::string_view set)
+score::Result<void> ParameterSetCollection::UpdateParameterSet(const score::cpp::string_view set_name,
+                                                               const score::cpp::string_view set)
 {
     const std::lock_guard<std::mutex> lock{mutex_};
 
-    const json::JsonParser json_parser{};
+    const score::json::JsonParser json_parser{};
     const std::string buffer{set.begin(), set.end()};
     auto parsing_result = json_parser.FromBuffer(buffer);
     if (!parsing_result.has_value())
@@ -111,15 +113,15 @@ Result<void> ParameterSetCollection::UpdateParameterSet(const score::cpp::string
         logger_.LogError() << "ParameterSetCollection::" << __func__
                            << "Can't parse input set data as json format with error: "
                            << parsing_result.error().Message();
-        return MakeUnexpected(DataModelError::kParsingError, "Can't parse input set data as json format");
+        return score::MakeUnexpected(DataModelError::kParsingError, "Can't parse input set data as json format");
     }
 
-    auto set_object_result = parsing_result.value().As<json::Object>();
+    auto set_object_result = parsing_result.value().As<score::json::Object>();
     if (!set_object_result.has_value())
     {
         logger_.LogError() << "ParameterSetCollection::" << __func__ << "set data:" << set_name
                            << ", expected to be object json formatted";
-        return MakeUnexpected(DataModelError::kParsingError, "Set data expected to be object json formatted");
+        return score::MakeUnexpected(DataModelError::kParsingError, "Set data expected to be object json formatted");
     }
 
     const auto set_data = Find(set_name);
@@ -127,7 +129,7 @@ Result<void> ParameterSetCollection::UpdateParameterSet(const score::cpp::string
     {
         logger_.LogError() << "ParameterSetCollection::" << __func__ << "ParameterSet with name:" << set_name
                            << "doesn't exist";
-        return MakeUnexpected(DataModelError::kParameterSetNotFound, "Parameter set is not found");
+        return score::MakeUnexpected(DataModelError::kParameterSetNotFound, "Parameter set is not found");
     }
 
     return (*set_data)->Update(std::move(set_object_result.value().get()));
@@ -161,10 +163,10 @@ score::Result<score::config_management::config_daemon::ParameterSetQualifier> Pa
     }
     logger_.LogError() << "ParameterSetCollection::" << __func__ << "ParameterSet with name:" << set_name
                        << "doesn't exist";
-    return MakeUnexpected(DataModelError::kParameterSetNotFound, "Parameter set not found");
+    return score::MakeUnexpected(DataModelError::kParameterSetNotFound, "Parameter set not found");
 }
 
-Result<void> ParameterSetCollection::SetParameterSetQualifier(
+score::Result<void> ParameterSetCollection::SetParameterSetQualifier(
     const score::cpp::string_view set_name,
     const score::config_management::config_daemon::ParameterSetQualifier qualifier)
 {
@@ -177,16 +179,16 @@ Result<void> ParameterSetCollection::SetParameterSetQualifier(
     }
     logger_.LogError() << "ParameterSetCollection::" << __func__ << "ParameterSet with name:" << set_name
                        << "doesn't exist";
-    return MakeUnexpected(DataModelError::kParameterSetNotFound, "Parameter set not found");
+    return score::MakeUnexpected(DataModelError::kParameterSetNotFound, "Parameter set not found");
 }
 
-score::Result<json::Object> ParameterSetCollection::GetParameterSetCollectionAsJson() const noexcept
+score::Result<score::json::Object> ParameterSetCollection::GetParameterSetCollectionAsJson() const noexcept
 {
     const std::lock_guard<std::mutex> lock{mutex_};
-    json::Object collection_json{};
+    score::json::Object collection_json{};
     for (const auto& entry : parameter_sets_)
     {
-        collection_json[entry.first.c_str()] = json::Any{entry.second->GetParameterSetAsJson()};
+        collection_json[entry.first.c_str()] = score::json::Any{entry.second->GetParameterSetAsJson()};
     }
     return collection_json;
 }

@@ -33,7 +33,7 @@ class InternalConfigProviderMock final : public IInternalConfigProvider
 
     MOCK_METHOD(Result<json::Any>,
                 GetParameterSet,
-                (const std::string_view, const std::chrono::milliseconds),
+                (const std::string_view, const std::chrono::milliseconds, const AdditionalShmSizing&),
                 (const, override));
     MOCK_METHOD(bool,
                 TrySubscribeToLastUpdatedParameterSetEvent,

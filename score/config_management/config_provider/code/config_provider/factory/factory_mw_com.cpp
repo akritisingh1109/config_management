@@ -19,7 +19,15 @@ namespace config_management
 namespace config_provider
 {
 
-ConfigProviderFactory::ConfigProviderFactory() : logger_{mw::log::CreateLogger(std::string_view("CfgP"))} {}
+ConfigProviderFactory::ConfigProviderFactory()
+    : logger_{mw::log::CreateLogger(std::string_view("CfgP"))}, buffer_size_report_path_{kDefaultBufferSizeReportPath}
+{
+}
+
+ConfigProviderFactory::ConfigProviderFactory(std::string_view buffer_size_report_path)
+    : logger_{mw::log::CreateLogger(std::string_view("CfgP"))}, buffer_size_report_path_{buffer_size_report_path}
+{
+}
 
 }  // namespace config_provider
 }  // namespace config_management

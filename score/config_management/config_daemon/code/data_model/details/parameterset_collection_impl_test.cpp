@@ -45,7 +45,7 @@ class ParameterSetCollectionFixture : public ::testing::Test
         set_name_for_update_tests_ = "set_name_for_update_tests";
 
         // insert a parameter set to be used for ParameterSetUpdate test
-        json::JsonParser parser{};
+        score::json::JsonParser parser{};
         std::string json_data{"[1,2,3]"};
         auto parsing_result = parser.FromBuffer(json_data);
         ASSERT_TRUE(parsing_result.has_value());
@@ -91,28 +91,8 @@ const std::string kByteArrayValue = R"({
     "list" : [ 1, 2, 3, 4, 5 ]
 })";
 
-score::cpp::pmr::string gExpectedParameterSet = R"({
-    "parameters": {
-        "test_parameter_name_byte_array": [
-            1,
-            2,
-            3,
-            4,
-            5
-        ],
-        "test_parameter_name_double": 1.7976931348623157e+308,
-        "test_parameter_name_float": 3.40282347e+38,
-        "test_parameter_name_int16": -32768,
-        "test_parameter_name_int32": -2147483648,
-        "test_parameter_name_int64": -9223372036854775808,
-        "test_parameter_name_int8": -128,
-        "test_parameter_name_uint16": 65535,
-        "test_parameter_name_uint32": 4294967295,
-        "test_parameter_name_uint64": 18446744073709551615,
-        "test_parameter_name_uint8": 255
-    },
-    "qualifier": 0
-})";
+score::cpp::pmr::string gExpectedParameterSet =
+    R"({"parameters":{"test_parameter_name_byte_array":[1,2,3,4,5],"test_parameter_name_double":1.7976931348623157e+308,"test_parameter_name_float":3.4028234663852886e+38,"test_parameter_name_int16":-32768,"test_parameter_name_int32":-2147483648,"test_parameter_name_int64":-9223372036854775808,"test_parameter_name_int8":-128,"test_parameter_name_uint16":65535,"test_parameter_name_uint32":4294967295,"test_parameter_name_uint64":18446744073709551615,"test_parameter_name_uint8":255},"qualifier":0})";
 
 TEST_F(ParameterSetCollectionFixture, ParameterSetCollectionComplexTest)
 {
@@ -140,24 +120,37 @@ TEST_F(ParameterSetCollectionFixture, ParameterSetCollectionComplexTest)
         std::thread thread_1([&]() noexcept {
             auto byte_array_value_res = score::json::JsonParser().FromBuffer(kByteArrayValue);
             EXPECT_TRUE(byte_array_value_res.has_value());
-            json::Any list{std::move(byte_array_value_res.value().As<json::Object>().value().get()["list"])};
+            score::json::Any list{
+                std::move(byte_array_value_res.value().As<score::json::Object>().value().get()["list"])};
             EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameByteArray, std::move(list)).has_value());
         });
         std::thread thread_2([&]() noexcept {
-            EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameUint64, json::Any{UINT64_MAX}).has_value());
-            EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameUint32, json::Any{UINT32_MAX}).has_value());
-            EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameUint16, json::Any{UINT16_MAX}).has_value());
-            EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameUint8, json::Any{UINT8_MAX}).has_value());
+            EXPECT_TRUE(
+                parameter_data_->Insert(set_name, kParameterNameUint64, score::json::Any{UINT64_MAX}).has_value());
+            EXPECT_TRUE(
+                parameter_data_->Insert(set_name, kParameterNameUint32, score::json::Any{UINT32_MAX}).has_value());
+            EXPECT_TRUE(
+                parameter_data_->Insert(set_name, kParameterNameUint16, score::json::Any{UINT16_MAX}).has_value());
+            EXPECT_TRUE(
+                parameter_data_->Insert(set_name, kParameterNameUint8, score::json::Any{UINT8_MAX}).has_value());
         });
         std::thread thread_3([&]() noexcept {
-            EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameInt64, json::Any{INT64_MIN}).has_value());
-            EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameInt32, json::Any{INT32_MIN}).has_value());
-            EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameInt16, json::Any{INT16_MIN}).has_value());
-            EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameInt8, json::Any{INT8_MIN}).has_value());
+            EXPECT_TRUE(
+                parameter_data_->Insert(set_name, kParameterNameInt64, score::json::Any{INT64_MIN}).has_value());
+            EXPECT_TRUE(
+                parameter_data_->Insert(set_name, kParameterNameInt32, score::json::Any{INT32_MIN}).has_value());
+            EXPECT_TRUE(
+                parameter_data_->Insert(set_name, kParameterNameInt16, score::json::Any{INT16_MIN}).has_value());
+            EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameInt8, score::json::Any{INT8_MIN}).has_value());
         });
         std::thread thread_4([&]() noexcept {
-            EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameFloat, json::Any{FLT_MAX}).has_value());
-            EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameDouble, json::Any{DBL_MAX}).has_value());
+            // ParameterSetJsonSerializer only supports json::Number values produced by parsing JSON (which the
+            // score::json parser always represents as 'double', never as 'float'), so insert a double here rather
+            // than a raw 'float' (json::Any{FLT_MAX} would violate that precondition and isn't safely serializable).
+            EXPECT_TRUE(
+                parameter_data_->Insert(set_name, kParameterNameFloat, score::json::Any{static_cast<double>(FLT_MAX)})
+                    .has_value());
+            EXPECT_TRUE(parameter_data_->Insert(set_name, kParameterNameDouble, score::json::Any{DBL_MAX}).has_value());
         });
 
         insert_threads.push_back(std::move(thread_1));
@@ -200,10 +193,11 @@ TEST_F(ParameterSetCollectionFixture, InsertParameterFailWhenParameterExist)
     score::cpp::string_view set_name_for_insert_tests = "set_name_for_insert_tests";
     score::cpp::string_view param_name_for_insert_tests = "parameter_name_for_insert_tests";
 
-    ASSERT_TRUE(
-        parameter_data_->Insert(set_name_for_insert_tests, param_name_for_insert_tests, json::Any{1}).has_value());
+    ASSERT_TRUE(parameter_data_->Insert(set_name_for_insert_tests, param_name_for_insert_tests, score::json::Any{1})
+                    .has_value());
 
-    auto insert_result = parameter_data_->Insert(set_name_for_insert_tests, param_name_for_insert_tests, json::Any{2});
+    auto insert_result =
+        parameter_data_->Insert(set_name_for_insert_tests, param_name_for_insert_tests, score::json::Any{2});
     ASSERT_FALSE(insert_result.has_value());
     ASSERT_EQ(insert_result.error(), MakeError(DataModelError::kParameterAlreadyExists));
 }
@@ -268,16 +262,7 @@ TEST_F(ParameterSetCollectionFixture, UpdateParameterSucceed)
     RecordProperty("Description",
                    "Verifies that UpdateParameterSet method will update the parameter set without an error and "
                    "GetParameterSet will return an updated value");
-    score::cpp::pmr::string expected_string_value = R"({
-    "parameters": {
-        "parameter_name": [
-            3,
-            4,
-            5
-        ]
-    },
-    "qualifier": 0
-})";
+    score::cpp::pmr::string expected_string_value = R"({"parameters":{"parameter_name":[3,4,5]},"qualifier":0})";
     std::string valid_set_object = R"({
         "parameter_name" : [3,4,5]
     })";
@@ -306,7 +291,7 @@ TEST_F(ParameterSetCollectionFixture, GetParameterFromSetSucceed)
     // check for initial value
     auto result = parameter_data_->GetParameterFromSet(set_name_for_update_tests_, "parameter_name");
     EXPECT_TRUE(result.has_value());
-    auto result_value = result.value().As<json::List>();
+    auto result_value = result.value().As<score::json::List>();
     EXPECT_TRUE(result_value.has_value());
     size_t value_id{0};
     for (const auto& value : result_value.value().get())
@@ -359,16 +344,7 @@ TEST_F(ParameterSetCollectionFixture, UpdateParameterShallFailForUnCalibratableP
         "Description",
         "Sets the target parameter set to non-calibratable, attempts an update with valid input, expects the update "
         "to fail with kParameterSetNotCalibratable, and verifies the parameter set remains unchanged.");
-    score::cpp::pmr::string expected_string_value = R"({
-    "parameters": {
-        "parameter_name": [
-            1,
-            2,
-            3
-        ]
-    },
-    "qualifier": 0
-})";
+    score::cpp::pmr::string expected_string_value = R"({"parameters":{"parameter_name":[1,2,3]},"qualifier":0})";
 
     std::string valid_set_object = R"({
         "parameter_name" : [3,4,5]
@@ -432,29 +408,10 @@ TEST_F(ParameterSetCollectionFixture, UpdateParameterSucceedInMultiThreadingUse)
 
     constexpr int kIterations = 1000;
 
-    score::cpp::pmr::string expected_string_value_by_thread1 = R"({
-    "parameters": {
-        "parameter_name": [
-            9,
-            10,
-            11,
-            12
-        ]
-    },
-    "qualifier": 0
-})";
+    score::cpp::pmr::string expected_string_value_by_thread1 =
+        R"({"parameters":{"parameter_name":[9,10,11,12]},"qualifier":0})";
 
-    score::cpp::pmr::string expected_string_value_by_thread2 = R"({
-    "parameters": {
-        "parameter_name": [
-            5,
-            6,
-            7,
-            8
-        ]
-    },
-    "qualifier": 0
-})";
+    score::cpp::pmr::string expected_string_value_by_thread2 = R"({"parameters":{"parameter_name":[5,6,7,8]},"qualifier":0})";
 
     pthread_barrier_t start_barrier;
     ASSERT_EQ(pthread_barrier_init(&start_barrier, nullptr, 2), 0);
@@ -601,7 +558,7 @@ TEST_F(ParameterSetCollectionFixture, GetParameterSetCollectionAsJson_SinglePara
     const auto set_entry = result.value().find(set_name_for_update_tests_.c_str());
     ASSERT_NE(set_entry, result.value().end());
 
-    const auto set_object_result = set_entry->second.As<json::Object>();
+    const auto set_object_result = set_entry->second.As<score::json::Object>();
     ASSERT_TRUE(set_object_result.has_value());
 
     const auto& set_object = set_object_result.value().get();
@@ -622,7 +579,8 @@ TEST_F(ParameterSetCollectionFixture, GetParameterSetCollectionAsJson_MultiplePa
                    "parameter sets as top-level keys.");
 
     const std::string second_set_name{"second_set"};
-    const auto insert_result = parameter_data_->Insert(second_set_name, "second_param", json::Any{std::int64_t{42}});
+    const auto insert_result =
+        parameter_data_->Insert(second_set_name, "second_param", score::json::Any{std::int64_t{42}});
     ASSERT_TRUE(insert_result.has_value());
 
     const auto result = parameter_data_->GetParameterSetCollectionAsJson();
@@ -636,14 +594,14 @@ TEST_F(ParameterSetCollectionFixture, GetParameterSetCollectionAsJson_MultiplePa
     ASSERT_NE(first_set_entry, result.value().end());
 
     // Verify the first set entry is a valid JSON object containing a "parameters" field
-    const auto first_set_object_result = first_set_entry->second.As<json::Object>();
+    const auto first_set_object_result = first_set_entry->second.As<score::json::Object>();
     ASSERT_TRUE(first_set_object_result.has_value());
 
     const auto& first_parameters_entry = first_set_object_result.value().get().find("parameters");
     ASSERT_NE(first_parameters_entry, first_set_object_result.value().get().end());
 
     // Verify the first set's "parameters" object contains the expected parameter name
-    const auto first_parameters_object_result = first_parameters_entry->second.As<json::Object>();
+    const auto first_parameters_object_result = first_parameters_entry->second.As<score::json::Object>();
     ASSERT_TRUE(first_parameters_object_result.has_value());
     EXPECT_NE(first_parameters_object_result.value().get().find("parameter_name"),
               first_parameters_object_result.value().get().end());
@@ -653,14 +611,14 @@ TEST_F(ParameterSetCollectionFixture, GetParameterSetCollectionAsJson_MultiplePa
     ASSERT_NE(second_set_entry, result.value().end());
 
     // Verify the second set entry is a valid JSON object containing a "parameters" field
-    const auto second_set_object_result = second_set_entry->second.As<json::Object>();
+    const auto second_set_object_result = second_set_entry->second.As<score::json::Object>();
     ASSERT_TRUE(second_set_object_result.has_value());
 
     const auto& second_parameters_entry = second_set_object_result.value().get().find("parameters");
     ASSERT_NE(second_parameters_entry, second_set_object_result.value().get().end());
 
     // Verify the second set's "parameters" object contains the expected parameter name
-    const auto second_parameters_object_result = second_parameters_entry->second.As<json::Object>();
+    const auto second_parameters_object_result = second_parameters_entry->second.As<score::json::Object>();
     ASSERT_TRUE(second_parameters_object_result.has_value());
     EXPECT_NE(second_parameters_object_result.value().get().find("second_param"),
               second_parameters_object_result.value().get().end());

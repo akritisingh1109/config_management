@@ -87,6 +87,30 @@ class ConfigProviderErrorDomain final : public score::result::ErrorDomain
             case score::cpp::to_underlying(ConfigProviderError::kParameterSetNotFound):
                 return "Parameter set was not found"sv;
             // coverity[autosar_cpp14_m6_4_5_violation]
+            case score::cpp::to_underlying(ConfigProviderError::kParameterSetNameTooLong):
+                return "Parameter set name exceeds the maximum supported length."sv;
+            // coverity[autosar_cpp14_m6_4_5_violation]
+            case score::cpp::to_underlying(ConfigProviderError::kMethodArgumentAllocationFailed):
+                return "Failed to allocate method arguments for the proxy request."sv;
+            // coverity[autosar_cpp14_m6_4_5_violation]
+            case score::cpp::to_underlying(ConfigProviderError::kGetParameterSetCallFailed):
+                return "GetParameterSet proxy method call failed."sv;
+            // coverity[autosar_cpp14_m6_4_5_violation]
+            case score::cpp::to_underlying(ConfigProviderError::kParameterSetPayloadTooLarge):
+                return "Parameter set payload exceeds the maximum size allocated for the call."sv;
+            // coverity[autosar_cpp14_m6_4_5_violation]
+            case score::cpp::to_underlying(ConfigProviderError::kBufferSizeReportNotFound):
+                return "buffer_size_report.json is missing or could not be read."sv;
+            // coverity[autosar_cpp14_m6_4_5_violation]
+            case score::cpp::to_underlying(ConfigProviderError::kBufferSizeReportParsingFailed):
+                return "buffer_size_report.json could not be parsed."sv;
+            // coverity[autosar_cpp14_m6_4_5_violation]
+            case score::cpp::to_underlying(ConfigProviderError::kParameterSetNotInBufferSizeReport):
+                return "Parameter set has no entry in buffer_size_report.json."sv;
+            // coverity[autosar_cpp14_m6_4_5_violation]
+            case score::cpp::to_underlying(ConfigProviderError::kJsonParserNotProvided):
+                return "No JSON parser was provided."sv;
+            // coverity[autosar_cpp14_m6_4_5_violation]
             default:
                 return "Unknown Error!"sv;
         }
