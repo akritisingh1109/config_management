@@ -20,7 +20,7 @@
 #include "score/config_management/config_daemon/code/fault_event_reporter/fault_event_reporter.h"
 #include "score/config_management/config_daemon/code/plugins/plugin_collector/plugin_collector.h"
 #include "score/config_management/config_daemon/code/services/internal_config_provider_service.h"
-#include "score/mw/service/provided_service_container.h"
+#include "score/mw/service/provided_services_container.h"
 
 #include <vector>
 
@@ -34,23 +34,23 @@ namespace config_management
 namespace config_daemon
 {
 
-class IFactory
+class Factory
 {
   public:
-    IFactory() = default;
-    virtual ~IFactory() = default;
-    IFactory(IFactory&&) = delete;
-    IFactory(const IFactory&) = delete;
+    Factory() = default;
+    virtual ~Factory() = default;
+    Factory(Factory&&) = delete;
+    Factory(const Factory&) = delete;
 
-    IFactory& operator=(IFactory&&) = delete;
-    IFactory& operator=(const IFactory&) = delete;
+    Factory& operator=(Factory&&) = delete;
+    Factory& operator=(const Factory&) = delete;
 
-    virtual mw::service::ProvidedServiceContainer CreateInternalConfigProviderService(
+    virtual mw::service::ProvidedServicesContainer CreateInternalConfigProviderService(
         const std::shared_ptr<data_model::IParameterSetCollection> read_only_parameter_data_interface) const = 0;
     virtual LastUpdatedParameterSetSender CreateLastUpdatedParameterSetSender(
-        mw::service::ProvidedServiceContainer& services) = 0;
+        mw::service::ProvidedServicesContainer& services) = 0;
     virtual InitialQualifierStateSender CreateInitialQualifierStateSender(
-        mw::service::ProvidedServiceContainer& services) = 0;
+        mw::service::ProvidedServicesContainer& services) = 0;
 
     virtual std::shared_ptr<data_model::IParameterSetCollectionManager> CreateParameterSetCollectionManager(
         std::vector<std::shared_ptr<IPlugin>>& plugins) const = 0;

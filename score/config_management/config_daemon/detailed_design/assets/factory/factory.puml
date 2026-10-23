@@ -4,9 +4,9 @@
 namespace score::config_management::config_daemon {
 abstract class IFactory {
   + {abstract} CreateInternalConfigProviderService(\n\
-      read_only_parameter_data_interface : const std::shared_ptr<data_model::IParameterSetCollection>) : mw::service::ProvidedServiceContainer
-  + {abstract} CreateLastUpdatedParameterSetSender(services : mw::service::ProvidedServiceContainer&) : LastUpdatedParameterSetSender
-  + {abstract} CreateInitialQualifierStateSender(services : mw::service::ProvidedServiceContainer&) : InitialQualifierStateSender
+      read_only_parameter_data_interface : const std::shared_ptr<data_model::IParameterSetCollection>) : mw::service::ProvidedServicesContainer
+  + {abstract} CreateLastUpdatedParameterSetSender(services : mw::service::ProvidedServicesContainer&) : LastUpdatedParameterSetSender
+  + {abstract} CreateInitialQualifierStateSender(services : mw::service::ProvidedServicesContainer&) : InitialQualifierStateSender
   + {abstract} CreateParameterSetCollection() : std::shared_ptr<data_model::IParameterSetCollection>
   + {abstract} CreatePluginCollector() : std::unique_ptr<IPluginCollector>
   + {abstract} CreateFaultEventReporter() : std::shared_ptr<fault_event_reporter::IFaultEventReporter>
@@ -20,9 +20,9 @@ abstract class IFactory {
 namespace score::config_management::config_daemon {
 class Factory {
   + CreateInternalConfigProviderService(\n\
-      read_only_parameter_data_interface : const std::shared_ptr<data_model::IParameterSetCollection>) : mw::service::ProvidedServiceContainer
-  + CreateLastUpdatedParameterSetSender(services : mw::service::ProvidedServiceContainer&) : LastUpdatedParameterSetSender
-  + CreateInitialQualifierStateSender(services : mw::service::ProvidedServiceContainer&) : InitialQualifierStateSender
+      read_only_parameter_data_interface : const std::shared_ptr<data_model::IParameterSetCollection>) : mw::service::ProvidedServicesContainer
+  + CreateLastUpdatedParameterSetSender(services : mw::service::ProvidedServicesContainer&) : LastUpdatedParameterSetSender
+  + CreateInitialQualifierStateSender(services : mw::service::ProvidedServicesContainer&) : InitialQualifierStateSender
   + CreateParameterSetCollection() : std::shared_ptr<data_model::IParameterSetCollection>
   + CreatePluginCollector() : std::unique_ptr<IPluginCollector>
   + CreateFaultEventReporter() : std::shared_ptr<fault_event_reporter::IFaultEventReporter>

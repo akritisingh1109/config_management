@@ -47,11 +47,11 @@ class IJsonHelper
     IJsonHelper& operator=(IJsonHelper&&) = delete;
     IJsonHelper& operator=(const IJsonHelper&) = delete;
 
-    virtual std::shared_ptr<json::IJsonParser> GetJsonParser() const noexcept = 0;
-    virtual std::shared_ptr<json::IJsonWriter> GetJsonWriter() const noexcept = 0;
-    virtual std::shared_ptr<json::IJsonWriter> GetJsonSyncedWriter() const noexcept = 0;
-    virtual std::shared_ptr<filesystem::IStandardFilesystem> GetStandardFilesystem() const noexcept = 0;
-    virtual std::shared_ptr<filesystem::IFileFactory> GetFileFactory() const noexcept = 0;
+    virtual std::shared_ptr<score::json::IJsonParser> GetJsonParser() const noexcept = 0;
+    virtual std::shared_ptr<score::json::IJsonWriter> GetJsonWriter() const noexcept = 0;
+    virtual std::shared_ptr<score::json::IJsonWriter> GetJsonSyncedWriter() const noexcept = 0;
+    virtual std::shared_ptr<score::filesystem::IStandardFilesystem> GetStandardFilesystem() const noexcept = 0;
+    virtual std::shared_ptr<score::filesystem::IFileFactory> GetFileFactory() const noexcept = 0;
 };
 
 }  // namespace common

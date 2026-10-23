@@ -28,16 +28,16 @@ package portinterfaces::internalconfigprovider::skeleton <<frame>> {
 }
 !endsub
 
-!startsub DiagnosticJobCollection
+!startsub DiagnosticServicesCollection
 package mw::diag <<frame>> {
-    class DiagnosticJobCollection {
+    class DiagnosticServicesCollection {
     }
 }
 !endsub
 
-!startsub ProvidedServiceContainer
+!startsub ProvidedServicesContainer
 package mw::service <<frame>> {
-    class ProvidedServiceContainer {
+    class ProvidedServicesContainer {
     }
 }
 !endsub
@@ -46,13 +46,6 @@ package mw::service <<frame>> {
 package ara <<frame>> {
     class ConfigCalibrationSkeleton <<generated>> {
         This class is generated based on franca definition.
-    }
-}
-!endsub
-
-!startsub ProvidedServiceBuilder
-package mw::service <<frame>> {
-    class ProvidedServiceBuilder {
     }
 }
 !endsub

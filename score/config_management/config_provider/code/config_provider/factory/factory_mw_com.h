@@ -14,9 +14,13 @@
 #define SCORE_CONFIG_MANAGEMENT_CONFIG_PROVIDER_CODE_CONFIG_PROVIDER_FACTORY_FACTORY_MW_COM_H
 
 #include "score/config_management/config_provider/code/config_provider/details/config_provider_impl.h"
+#include "score/config_management/config_provider/code/config_provider/factory/buffer_size_report.h"
+#include "score/config_management/config_provider/code/config_provider/factory/semi_dynamic_single_instantiation_strategy.h"
 #include "score/config_management/config_provider/code/persistency/details/persistency_impl.h"
 #include "score/config_management/config_provider/code/proxies/details/mw_com/internal_config_provider_impl.h"
+#include "score/config_management/lib/mw_com_types/internal_config_provider_type.h"
 
+#include "score/json/json_parser.h"
 #include "score/mw/log/logger.h"
 #include "score/mw/service/backend/mw_com/single_instantiation_strategy.h"
 #include "score/mw/service/proxy_needs.h"
@@ -27,6 +31,9 @@
 #include <score/optional.hpp>
 #include <score/vector.hpp>
 
+#include <memory>
+#include <string>
+
 namespace score
 {
 namespace config_management
@@ -36,10 +43,19 @@ namespace config_provider
 
 using Proxies = mw::service::ProxyNeeds<mw::service::Optional<IInternalConfigProvider>>;
 
+constexpr std::size_t kParameterSetNameNullTerminatorSize{1U};
+constexpr std::size_t kParameterSetPayloadNullTerminatorSize{1U};
 class ConfigProviderFactory final
 {
   public:
     ConfigProviderFactory();
+
+    /// @param buffer_size_report_path Overrides where buffer_size_report.json is read from (see
+    /// BufferSizeReport::GetMaxBufferSizeInfo()). Only needed by callers that can't rely on the production
+    /// default (kDefaultBufferSizeReportPath) resolving correctly - e.g. in-process SCT test bindings that run
+    /// outside of sctf's sandboxed mount namespace and must instead point at their own deployed copy.
+    explicit ConfigProviderFactory(std::string_view buffer_size_report_path);
+
     ~ConfigProviderFactory() = default;
     ConfigProviderFactory(ConfigProviderFactory&&) = delete;
     ConfigProviderFactory(const ConfigProviderFactory&) = delete;
@@ -84,6 +100,10 @@ class ConfigProviderFactory final
     }
 
     template <typename InternalConfigProviderPort>
+    [[deprecated(
+        "SPP_DEPRECATION: Use the Create() overload with an initial_parameter_set_name_list parameter instead. "
+        "Without it, the shared-memory buffer is sized for the largest parameter set in "
+        "buffer_size_report.json instead of just the ones actually used.")]]
     score::cpp::pmr::unique_ptr<ConfigProvider> Create(
         score::cpp::stop_token token,
         std::chrono::milliseconds timeout,
@@ -103,6 +123,10 @@ class ConfigProviderFactory final
     }
 
     template <typename InternalConfigProviderPort>
+    [[deprecated(
+        "SPP_DEPRECATION: Use the Create() overload with an initial_parameter_set_name_list parameter instead. "
+        "Without it, the shared-memory buffer is sized for the largest parameter set in "
+        "buffer_size_report.json instead of just the ones actually used.")]]
     score::cpp::pmr::unique_ptr<ConfigProvider> Create(
         score::cpp::stop_token token,
         score::cpp::pmr::unique_ptr<Persistency> persistency,
@@ -122,6 +146,10 @@ class ConfigProviderFactory final
     }
 
     template <typename InternalConfigProviderPort>
+    [[deprecated(
+        "SPP_DEPRECATION: Use the Create() overload with an initial_parameter_set_name_list parameter instead. "
+        "Without it, the shared-memory buffer is sized for the largest parameter set in "
+        "buffer_size_report.json instead of just the ones actually used.")]]
     score::cpp::pmr::unique_ptr<ConfigProvider> Create(
         score::cpp::stop_token token,
         std::chrono::milliseconds timeout,
@@ -139,6 +167,10 @@ class ConfigProviderFactory final
     }
 
     template <typename InternalConfigProviderPort>
+    [[deprecated(
+        "SPP_DEPRECATION: Use the Create() overload with an initial_parameter_set_name_list parameter instead. "
+        "Without it, the shared-memory buffer is sized for the largest parameter set in "
+        "buffer_size_report.json instead of just the ones actually used.")]]
     score::cpp::pmr::unique_ptr<ConfigProvider> Create(
         score::cpp::stop_token token,
         score::cpp::pmr::unique_ptr<Persistency> persistency,
@@ -168,15 +200,56 @@ class ConfigProviderFactory final
         score::cpp::optional<score::cpp::pmr::vector<std::string_view>> initial_parameter_set_name_list) const
     {
         using InternalConfigProviderStrategy =
-            mw::service::backend::mw_com::SingleInstantiationStrategy<IInternalConfigProvider,
-                                                                      InternalConfigProvider,
-                                                                      InternalConfigProvider::InternalMwComProxy,
-                                                                      InternalConfigProviderPort>;
+            SemiDynamicSingleInstantiationStrategy<IInternalConfigProvider,
+                                                   InternalConfigProvider,
+                                                   InternalConfigProvider::InternalMwComProxy,
+                                                   InternalConfigProviderPort>;
         logger_.LogDebug() << "ConfigProviderFactory::" << __func__;
 
         using RequiredProxies = mw::service::ProxyNeeds<mw::service::Optional<IInternalConfigProvider>>;
 
-        auto proxy_needs = mw::service::ProxyNeedsFactory<RequiredProxies>::Create<InternalConfigProviderStrategy>();
+        // Parameter set names have no small universal bound - e.g.
+        // score::config_management::config_daemon::mw_com_icp_types::kMaxParameterSetNameSize only bounds the fixed-size
+        // last_updated_parameter_set EVENT for calibration sets, not the semi-dynamic get_parameter_set METHOD,
+        // whose coding parameter set names routinely exceed it - so this must be computed from
+        // buffer_size_report.json rather than a fixed constant.
+        const auto shm_sizing_result = BufferSizeReport::GetMaxBufferSizeInfo(initial_parameter_set_name_list,
+                                                                              memory_resource,
+                                                                              std::make_shared<json::JsonParser>(),
+                                                                              buffer_size_report_path_);
+        // Falling back to conservative default sizes (rather than returning nullptr) keeps ConfigProvider usable
+        // even if buffer_size_report.json is missing or malformed. kMinParameterSetContentBufferSize is a true
+        // floor - always big enough for the skeleton's sentinel content - but there is no equivalent bound for
+        // the name: as noted above, kMaxParameterSetNameSize only bounds the fixed-size event and real
+        // get_parameter_set names routinely exceed it, so using it here would give false confidence. Defaulting
+        // the name length to 0 instead reserves no guessed space for it, so GetParameterSet() calls will fail
+        // cleanly and gracefully per-call (handled by the existing proxy error path) instead of the whole
+        // ConfigProvider failing to come up.
+        AdditionalShmSizing shm_sizing{config_daemon::mw_com_icp_types::kMinParameterSetContentBufferSize, 0U};
+        if (!shm_sizing_result.has_value())
+        {
+            logger_.LogError() << "ConfigProviderFactory::" << __func__
+                               << ": Failed to determine parameter set buffer size from buffer_size_report.json, "
+                                  "falling back to default buffer sizes: "
+                               << shm_sizing_result.error().UserMessage();
+        }
+        else
+        {
+            shm_sizing = shm_sizing_result.value();
+        }
+
+        // The additional shared-memory pool backing the semi-dynamic `get_parameter_set` method call must fit both
+        // dynamically-sized arguments allocated from it: the requested parameter set name (arg1) and the returned
+        // payload (arg2). Reserving only the payload size leaves no room for the name buffer, causing a fatal
+        // "Cannot allocate shared memory block" error once the name buffer has consumed part of the reserved pool.
+        // One extra byte per string budgets for a null terminator, in case either buffer's contents ever end up
+        // null-terminated (neither is today - see internal_config_provider_impl.cpp - but this keeps the same
+        // conservative safety margin against SHM allocator overhead that both strings historically had.
+
+        auto proxy_needs = mw::service::ProxyNeedsFactory<RequiredProxies>::Create(InternalConfigProviderStrategy{
+            shm_sizing.max_payload_size + shm_sizing.max_name_length + kParameterSetNameNullTerminatorSize +
+            kParameterSetPayloadNullTerminatorSize});
+
         auto proxy_container = proxy_needs.InitiateServiceDiscovery(token).GetProxyContainer();
 
         logger_.LogDebug() << "ConfigProviderFactory:: Create ConfigProviderImpl";
@@ -189,13 +262,15 @@ class ConfigProviderFactory final
             polling_cycle_interval,
             std::move(callback),
             std::move(persistency),
-            std::move(initial_parameter_set_name_list));
+            std::move(initial_parameter_set_name_list),
+            shm_sizing);
 
         score::cpp::ignore = config_provider->WaitUntilConnected(timeout, token);
         return config_provider;
     }
 
     mw::log::Logger& logger_;
+    std::string buffer_size_report_path_;
 };
 
 }  // namespace config_provider

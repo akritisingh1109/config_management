@@ -39,15 +39,15 @@ class ParameterSetStorageScoreImpl final : public IParameterSetStorage
     /// @brief Construct the storage impl, taking ownership of an opened Kvs instance.
     explicit ParameterSetStorageScoreImpl(std::unique_ptr<score::mw::per::kvs::Kvs> kvs) noexcept;
 
-    Result<void> StoreParameterSetCollection(data_model::IParameterSetCollection& collection) noexcept override;
+    score::Result<void> StoreParameterSetCollection(data_model::IParameterSetCollection& collection) noexcept override;
 
     /// @brief LoadParameterSetCollection is not applicable on the SCORE platform (no filesystem access).
     ///        Always returns false to indicate the default parameter set collection is in use.
-    Result<bool> LoadParameterSetCollection(data_model::IParameterSetCollection& collection) noexcept override;
+    score::Result<bool> LoadParameterSetCollection(data_model::IParameterSetCollection& collection) noexcept override;
 
   private:
-    Result<std::string> ReadParameterSetCollectionHash() const noexcept;
-    Result<void> PersistParameterSetCollectionHash(const std::string& hash) noexcept;
+    score::Result<std::string> ReadParameterSetCollectionHash() const noexcept;
+    score::Result<void> PersistParameterSetCollectionHash(const std::string& hash) noexcept;
     std::unique_ptr<score::mw::per::kvs::Kvs> kvs_;
 };
 

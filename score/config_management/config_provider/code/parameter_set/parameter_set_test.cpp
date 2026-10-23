@@ -15,6 +15,8 @@
 
 #include <gtest/gtest.h>
 
+#include <string>
+
 namespace score
 {
 namespace config_management
@@ -269,6 +271,76 @@ TEST(ParameterQualifierTest, GetQualifierTest_Qualifying)
     EXPECT_EQ(result.value(), score::config_management::config_daemon::ParameterSetQualifier::kQualifying);
 }
 
+class GetQualifierFromStringTest
+    : public ::testing::TestWithParam<std::pair<std::string, score::config_management::config_daemon::ParameterSetQualifier>>
+{
+};
+
+TEST_P(GetQualifierFromStringTest, ReturnsExpectedQualifier)
+{
+    RecordProperty("Priority", "3");
+    RecordProperty("Description",
+                   "Verifies that GetQualifier() correctly parses the human-readable qualifier strings "
+                   "written by default_parameter_set_collection_lib.py (e.g. 'Default').");
+    RecordProperty("TestType", "Requirements-based test");
+    RecordProperty("DerivationTechnique", "Analysis of requirements");
+
+    const auto& [qualifier_string, expected_qualifier] = GetParam();
+
+    json::JsonParser json_parser{};
+    // Given the parameter set qualifier is encoded as a human-readable string
+    const auto str = std::string{R"(
+    {
+        "parameters": {
+            "parameter_name": 55
+        },
+        "qualifier": ")"} +
+                     qualifier_string + R"("
+    })";
+    ParameterSet parameter_set{std::move(json_parser.FromBuffer(str).value())};
+
+    auto result = parameter_set.GetQualifier();
+    // Then expect GetQualifier would retrieve the corresponding qualifier enum value
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result.value(), expected_qualifier);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    AllQualifierStrings,
+    GetQualifierFromStringTest,
+    ::testing::Values(std::make_pair("Unqualified", score::config_management::config_daemon::ParameterSetQualifier::kUnqualified),
+                      std::make_pair("Qualified", score::config_management::config_daemon::ParameterSetQualifier::kQualified),
+                      std::make_pair("Default", score::config_management::config_daemon::ParameterSetQualifier::kDefault),
+                      std::make_pair("Modified", score::config_management::config_daemon::ParameterSetQualifier::kModified),
+                      std::make_pair("Qualifying", score::config_management::config_daemon::ParameterSetQualifier::kQualifying)));
+
+TEST(ParameterQualifierTest, GetQualifierTest_UnknownString)
+{
+    RecordProperty("Priority", "3");
+    RecordProperty("Description",
+                   "Tests error handling when qualifier is a string that doesn't match any known "
+                   "qualifier name.");
+    RecordProperty("TestType", "Fault injection test");
+    RecordProperty("DerivationTechnique", "Error guessing based on knowledge or experience");
+
+    json::JsonParser json_parser{};
+    // Given the parameter set qualifier is a string not matching any known qualifier name
+    const auto* str = R"(
+    {
+        "parameters": {
+            "parameter_name": 55
+        },
+        "qualifier": "NotAQualifier"
+    }
+    )";
+    ParameterSet parameter_set{std::move(json_parser.FromBuffer(str).value())};
+
+    auto result = parameter_set.GetQualifier();
+    // Then expect GetQualifier would return error
+    ASSERT_FALSE(result.has_value());
+    EXPECT_EQ(result.error(), ConfigProviderError::kValueCastingError);
+}
+
 TEST(ParameterQualifierTest, GetQualifierTest_Invalid)
 {
     RecordProperty("Priority", "3");
@@ -413,7 +485,7 @@ TEST(ParameterSetFormatTest, FormatAsKeyValuePairsPass)
     const auto* const json_input_string = R"({
     "parameters": {
         "alg_abort_ccm_offset_distance": 100,
-        "alg_abort_ccm_offset_duration": 3.222,
+        "alg_abort_ccm_offset_duration": 3.25,
         "alg_abort_distance_debounce_after_cut_off": 150,
         "alg_abort_distance_debounce_before_cut_off": 50,
         "alg_abort_distance_lane_depending_on_speed_base_value_x": [[
@@ -433,7 +505,7 @@ TEST(ParameterSetFormatTest, FormatAsKeyValuePairsPass)
 
     std::string parameter_set_expected_formatted_string = R"({
     "alg_abort_ccm_offset_distance": 100,
-    "alg_abort_ccm_offset_duration": 3.22199988,
+    "alg_abort_ccm_offset_duration": 3.25,
     "alg_abort_distance_countries": [
         "Germany",
         "France"

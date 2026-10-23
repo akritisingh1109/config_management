@@ -23,8 +23,8 @@ class InternalConfigProviderService{
     + SendLastUpdatedParameterSet(parameter_set_name : const std::string_view) : bool
     + GetParameterSet(parameter_set_name : const ::mw::diag::string&) : ::mw::core::Future<GetParameterSetOutput>
 
-    + StartService() : void
-    + StopService() : void
+    + Start() : Result<void>
+    + Stop() : void
     --
     - internal_config_provider_service_reactor_ : const std::shared_ptr<InternalConfigProviderServiceReactor>
     - initial_qualifier_state_ : config_daemon::InitialQualifierState
@@ -36,6 +36,6 @@ class InternalConfigProviderService{
 
 IInternalConfigProviderService <|-- InternalConfigProviderService
 InternalConfigProviderSkeleton <|-- InternalConfigProviderService
-ProvidedServiceContainer *-- IInternalConfigProviderService
+ProvidedServicesContainer *-- IInternalConfigProviderService
 
 @enduml

@@ -19,10 +19,8 @@
 #include "score/config_management/config_daemon/code/plugins/plugin_mock.h"
 #include "score/config_management/config_daemon/code/services/internal_config_provider_service_mock.h"
 #include "score/os/errno.h"
-#include "score/result/result.h"
-
 #include "score/os/mocklib/stat_mock.h"
-#include "score/mw/service/provided_service.h"
+#include "score/result/result.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -65,43 +63,6 @@ class MockFactory
     }
 };
 
-template <typename ServiceType>
-class ServiceDecorator final : public score::mw::service::ProvidedService
-{
-  public:
-    using ServiceHolder = std::unique_ptr<ServiceType>;
-
-    template <typename ServiceImplType = ServiceType, typename... Args>
-    static ServiceDecorator Create(Args&&... args)
-    {
-        ServiceDecorator instance{};
-        instance.service_ = std::make_unique<ServiceImplType>(std::forward<Args>(args)...);
-        return instance;
-    }
-
-    void StartService() noexcept override
-    {
-        service_->OfferService();
-    }
-    void StopService() noexcept override
-    {
-        service_->WithdrawService();
-    }
-    ServiceType* GetService() noexcept
-    {
-        return service_.get();
-    }
-    ServiceHolder ExtractService() noexcept
-    {
-        decltype(service_) service{};
-        service_.swap(service);
-        return service;
-    }
-
-  private:
-    ServiceHolder service_;
-};
-
 class ConfigDaemonFixture : public ::testing::Test
 {
   protected:
@@ -120,7 +81,7 @@ class ConfigDaemonFixture : public ::testing::Test
     void FactoryDefaultSetup();
     void ComponentsDefaultSetup();
     void PluginCollectorSetup();
-    mw::service::ProvidedServiceContainer CreateProvidedServiceContainer();
+    mw::service::ProvidedServicesContainer CreateInternalConfigProviderService();
 
     score::os::StatMock stat_mock_;
     std::unique_ptr<score::config_management::config_daemon::FactoryMock> factory_mock_;
@@ -130,10 +91,10 @@ class ConfigDaemonFixture : public ::testing::Test
     std::unique_ptr<PluginCollectorMock> plugin_collector_mock_;
 };
 
-mw::service::ProvidedServiceContainer ConfigDaemonFixture::CreateProvidedServiceContainer()
+mw::service::ProvidedServicesContainer ConfigDaemonFixture::CreateInternalConfigProviderService()
 {
-    score::mw::service::ProvidedServices<ServiceDecorator> services{};
-    services.Add<InternalConfigProviderServiceMock>();
+    mw::service::ProvidedServicesContainer services{};
+    EXPECT_TRUE(services.Emplace<::testing::NiceMock<InternalConfigProviderServiceMock>>().has_value());
     return services;
 }
 
@@ -143,7 +104,7 @@ void ConfigDaemonFixture::FactoryDefaultSetup()
         auto mock = std::make_shared<data_model::ParameterSetCollectionManagerMock>();
         ON_CALL(*mock, GetParameterSetCollection()).WillByDefault(Return(nullptr));
         ON_CALL(*mock, LoadParameterSetCollectionFromStorage())
-            .WillByDefault(Return(Result<InitialQualifierState>{InitialQualifierState::kDefault}));
+            .WillByDefault(Return(score::Result<InitialQualifierState>{InitialQualifierState::kDefault}));
         return mock;
     }));
     ON_CALL(*factory_mock_, CreateFaultEventReporter()).WillByDefault(Invoke([] {
@@ -159,13 +120,13 @@ void ConfigDaemonFixture::FactoryDefaultSetup()
         return [](const InitialQualifierState) noexcept {};
     }));
     ON_CALL(*factory_mock_, CreateInternalConfigProviderService(_)).WillByDefault(Invoke([this](auto&&) {
-        return CreateProvidedServiceContainer();
+        return CreateInternalConfigProviderService();
     }));
 }
 
 void ConfigDaemonFixture::ComponentsDefaultSetup()
 {
-    ON_CALL(*first_plugin_mock_, Initialize()).WillByDefault(Return(Result<void>{}));
+    ON_CALL(*first_plugin_mock_, Initialize()).WillByDefault(Return(score::Result<void>{}));
 }
 
 void ConfigDaemonFixture::PluginCollectorSetup()
@@ -174,8 +135,8 @@ void ConfigDaemonFixture::PluginCollectorSetup()
     plugins.push_back(first_plugin_mock_);
     plugins.push_back(second_plugin_mock_);
     ON_CALL(*plugin_collector_mock_, CreatePlugins()).WillByDefault(Return(plugins));
-    ON_CALL(*first_plugin_mock_, Initialize()).WillByDefault(Return(Result<void>{}));
-    ON_CALL(*second_plugin_mock_, Initialize()).WillByDefault(Return(Result<void>{}));
+    ON_CALL(*first_plugin_mock_, Initialize()).WillByDefault(Return(score::Result<void>{}));
+    ON_CALL(*second_plugin_mock_, Initialize()).WillByDefault(Return(score::Result<void>{}));
     ON_CALL(*factory_mock_, CreatePluginCollector()).WillByDefault(Return(ByMove(std::move(plugin_collector_mock_))));
 }
 
@@ -241,26 +202,30 @@ TEST_F(ConfigDaemonFixture, ConfigDaemonAppSettingUmaskFailed)
     ASSERT_EQ(config_daemon_app_->Initialize(gDummyContext), kExitCodeSuccess);
 }
 
-TEST_F(ConfigDaemonFixture, ConfigDaemonAppFailedToCreateInternalConfigProviderService)
+TEST_F(ConfigDaemonFixture, ConfigDaemonAppRunFailsWhenInternalConfigProviderServiceContainerIsEmpty)
 {
     RecordProperty("Priority", "3");
     RecordProperty("DerivationTechnique", "Error guessing");
     RecordProperty("TestType", "Interface test");
-    RecordProperty("Verifies", "::score::config_management::config_daemon::ConfigDaemon::Initialize()");
-    RecordProperty(
-        "Description",
-        "This test ensures that Initialize would return fail, when InternalConfigProviderService cannot be created");
+    RecordProperty("Verifies", "::score::config_management::config_daemon::ConfigDaemon::Run()");
+    RecordProperty("Description",
+                   "This test ensures that Run() fails when the InternalConfigProviderService container is empty.");
 
-    // Given the factory failed to create RawDataStorage
+    // Given the factory returns an empty InternalConfigProviderService container
     FactoryDefaultSetup();
     EXPECT_CALL(*factory_mock_, CreateInternalConfigProviderService(_)).Times(1).WillOnce(Invoke([](auto&&) {
-        return mw::service::ProvidedServiceContainer{};
+        return mw::service::ProvidedServicesContainer{};
     }));
-    ;
+    EXPECT_CALL(*first_plugin_mock_, Run(_, _, _, _, _)).Times(0);
+    EXPECT_CALL(*second_plugin_mock_, Run(_, _, _, _, _)).Times(0);
+    EXPECT_CALL(*first_plugin_mock_, Deinitialize());
+    EXPECT_CALL(*second_plugin_mock_, Deinitialize());
     config_daemon_app_ = std::make_unique<score::config_management::config_daemon::ConfigDaemon>(std::move(factory_mock_));
-    // When the Initialize function is run
-    // Then the Initialize function would fail
-    ASSERT_EQ(config_daemon_app_->Initialize(gDummyContext), kExitCodeFailure);
+    // When Initialize succeeds and Run is executed
+    // Then Run fails because the service container is empty, and the initialized plugins get deinitialized
+    ASSERT_EQ(config_daemon_app_->Initialize(gDummyContext), kExitCodeSuccess);
+    score::cpp::stop_source source;
+    ASSERT_EQ(config_daemon_app_->Run(source.get_token()), kExitCodeFailure);
 }
 
 TEST_F(ConfigDaemonFixture, ConfigDaemonAppRunSucceed)
@@ -277,8 +242,8 @@ TEST_F(ConfigDaemonFixture, ConfigDaemonAppRunSucceed)
     // Given the factory is able to create necessary components
     ComponentsDefaultSetup();
     FactoryDefaultSetup();
-    EXPECT_CALL(*first_plugin_mock_, Initialize()).WillOnce(Return(Result<void>{}));
-    EXPECT_CALL(*second_plugin_mock_, Initialize()).WillOnce(Return(Result<void>{}));
+    EXPECT_CALL(*first_plugin_mock_, Initialize()).WillOnce(Return(score::Result<void>{}));
+    EXPECT_CALL(*second_plugin_mock_, Initialize()).WillOnce(Return(score::Result<void>{}));
     EXPECT_CALL(*first_plugin_mock_, Run(_, _, _, _, _)).WillOnce(Return(kExitCodeSuccess));
     EXPECT_CALL(*second_plugin_mock_, Run(_, _, _, _, _)).WillOnce(Return(kExitCodeSuccess));
     EXPECT_CALL(*first_plugin_mock_, Deinitialize());
@@ -325,7 +290,7 @@ TEST_F(ConfigDaemonFixture, ConfigDaemonAppFailedToSetupPlugins)
     ComponentsDefaultSetup();
     FactoryDefaultSetup();
 
-    Result<void> error_result{score::MakeUnexpected(score::json::Error::kParsingError, "")};
+    score::Result<void> error_result{score::MakeUnexpected(score::json::Error::kParsingError, "")};
     EXPECT_CALL(*first_plugin_mock_, Initialize()).WillOnce(Return(error_result));
     EXPECT_CALL(*second_plugin_mock_, Initialize()).Times(0);
 
@@ -346,8 +311,8 @@ TEST_F(ConfigDaemonFixture, ConfigDaemonAppFailedToInitializeSecondPlugin)
     ComponentsDefaultSetup();
     FactoryDefaultSetup();
 
-    Result<void> error_result{score::MakeUnexpected(score::json::Error::kParsingError, "")};
-    EXPECT_CALL(*first_plugin_mock_, Initialize()).WillOnce(Return(Result<void>{}));
+    score::Result<void> error_result{score::MakeUnexpected(score::json::Error::kParsingError, "")};
+    EXPECT_CALL(*first_plugin_mock_, Initialize()).WillOnce(Return(score::Result<void>{}));
     EXPECT_CALL(*second_plugin_mock_, Initialize()).WillOnce(Return(error_result));
 
     config_daemon_app_ = std::make_unique<score::config_management::config_daemon::ConfigDaemon>(std::move(factory_mock_));
@@ -418,8 +383,8 @@ TEST_F(ConfigDaemonFixture, ConfigDaemonAppFailedToInitializeAsPluginIsNull)
     plugins.push_back(first_plugin_mock);
     plugins.push_back(second_plugin_mock);
     EXPECT_CALL(*plugin_collector_mock_raw, CreatePlugins()).WillOnce(Return(plugins));
-    ON_CALL(*first_plugin_mock, ParameterSetCollectionUpdateStart(_)).WillByDefault(Return(Result<void>{}));
-    EXPECT_CALL(*first_plugin_mock, Initialize()).WillOnce(Return(Result<void>{}));
+    ON_CALL(*first_plugin_mock, ParameterSetCollectionUpdateStart(_)).WillByDefault(Return(score::Result<void>{}));
+    EXPECT_CALL(*first_plugin_mock, Initialize()).WillOnce(Return(score::Result<void>{}));
 
     config_daemon_app_ = std::make_unique<score::config_management::config_daemon::ConfigDaemon>(std::move(factory_mock_));
     ASSERT_EQ(config_daemon_app_->Initialize(gDummyContext), kExitCodeFailure);

@@ -30,9 +30,9 @@ namespace data_model
 class ParameterSetCollectionManagerMock final : public IParameterSetCollectionManager
 {
   public:
-    MOCK_METHOD(Result<InitialQualifierState>, LoadParameterSetCollectionFromStorage, (), (noexcept, override));
+    MOCK_METHOD(score::Result<InitialQualifierState>, LoadParameterSetCollectionFromStorage, (), (noexcept, override));
     MOCK_METHOD(std::shared_ptr<IParameterSetCollection>, GetParameterSetCollection, (), (override));
-    MOCK_METHOD(Result<void>, ParameterSetCollectionUpdateRequest, (), (override));
+    MOCK_METHOD(score::Result<void>, ParameterSetCollectionUpdateRequest, (), (override));
 };
 
 }  // namespace data_model

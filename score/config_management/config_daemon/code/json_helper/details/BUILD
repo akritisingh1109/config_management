@@ -28,6 +28,6 @@ cc_library(
     deps = [
         "//score/config_management/config_daemon/code/json_helper",
         "@score_baselibs//score/filesystem",
-        "@score_baselibs//score/json:json_impl",
+        "@score_baselibs//score/json",
     ],
 )

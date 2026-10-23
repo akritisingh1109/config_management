@@ -32,7 +32,7 @@ class PluginMock final : public IPlugin
   public:
     ~PluginMock() = default;
 
-    MOCK_METHOD(Result<void>, Initialize, (), (override));
+    MOCK_METHOD(score::Result<void>, Initialize, (), (override));
     MOCK_METHOD(void, Deinitialize, (), (noexcept, override));
 
     MOCK_METHOD(std::int32_t,
@@ -43,7 +43,10 @@ class PluginMock final : public IPlugin
                  score::cpp::stop_token stop_token,
                  std::shared_ptr<fault_event_reporter::IFaultEventReporter> fault_event_reporter),
                 (override));
-    MOCK_METHOD(Result<void>, ParameterSetCollectionUpdateStart, (data_model::IParameterSetCollection&), (override));
+    MOCK_METHOD(score::Result<void>,
+                ParameterSetCollectionUpdateStart,
+                (data_model::IParameterSetCollection&),
+                (override));
 };
 
 }  // namespace config_daemon

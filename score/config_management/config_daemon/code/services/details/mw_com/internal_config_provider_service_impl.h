@@ -15,9 +15,9 @@
 #define SCORE_CONFIG_MANAGEMENT_CONFIG_DAEMON_CODE_SERVICES_DETAILS_MW_COM_INTERNAL_CONFIG_PROVIDER_SERVICE_IMPL_H
 
 #include "score/config_management/config_daemon/code/data_model/parameterset_collection_interfaces/read_only_parameterset_collection.h"
-#include "score/config_management/config_daemon/code/services/details/mw_com/generated_service/internal_config_provider_type.h"
 #include "score/config_management/config_daemon/code/services/internal_config_provider_service.h"
 #include "score/config_management/config_daemon/code/services/internal_config_provider_service_reactor.h"
+#include "score/config_management/lib/mw_com_types/internal_config_provider_type.h"
 #include "score/mw/log/logger.h"
 #include <score/string_view.hpp>
 #include <memory>
@@ -29,23 +29,28 @@ namespace config_management
 namespace config_daemon
 {
 
+using InternalConfigProviderSkeleton = score::mw::com::AsSkeleton<InternalConfigProviderInterface>;
+
 class InternalConfigProviderService final : public IInternalConfigProviderService
 {
   public:
-    static score::Result<InternalConfigProviderService> Create(
+    static score::Result<std::unique_ptr<InternalConfigProviderService>> Create(
         std::shared_ptr<InternalConfigProviderServiceReactor> internal_config_provider_service_reactor,
         const score::mw::com::InstanceSpecifier& instance_specifier);
+    InternalConfigProviderService(InternalConfigProviderService&&) noexcept = delete;
+    InternalConfigProviderService(const InternalConfigProviderService&) noexcept = delete;
 
     void SetInitialQualifierState(const config_daemon::InitialQualifierState initial_qualifier_state) noexcept override;
     bool SendLastUpdatedParameterSet(const std::string_view parameter_set_name) noexcept override;
 
-    void StartService() override;
-    void StopService() override;
+    Result<void> Start() override;
+    void Stop() noexcept override;
 
-  private:
     explicit InternalConfigProviderService(
         std::shared_ptr<InternalConfigProviderServiceReactor> internal_config_provider_service_reactor,
         InternalConfigProviderSkeleton icp_skeleton);
+
+  private:
     const std::shared_ptr<InternalConfigProviderServiceReactor> internal_config_provider_service_reactor_;
     InternalConfigProviderSkeleton icp_skeleton_;
     config_daemon::InitialQualifierState initial_qualifier_state_;

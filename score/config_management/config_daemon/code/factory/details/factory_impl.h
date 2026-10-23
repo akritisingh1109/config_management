@@ -15,9 +15,9 @@
 #define SCORE_CONFIG_MANAGEMENT_CONFIG_DAEMON_CODE_FACTORY_DETAILS_FACTORY_IMPL_H
 
 #include "score/config_management/config_daemon/code/factory/factory.h"
-#include "score/config_management/config_daemon/code/json_helper/json_helper.h"
+#include "score/config_management/config_daemon/code/factory/infrastructure_factory.h"
+#include "score/config_management/config_daemon/code/factory/service_factory.h"
 
-#include <score/memory.hpp>
 #include <memory>
 
 namespace score
@@ -27,23 +27,23 @@ namespace config_management
 namespace config_daemon
 {
 
-class Factory final : public IFactory
+class FactoryImpl final : public Factory
 {
   public:
-    Factory();
-    ~Factory() override = default;
-    Factory(Factory&&) = delete;
-    Factory(const Factory&) = delete;
+    FactoryImpl();
+    ~FactoryImpl() override = default;
+    FactoryImpl(FactoryImpl&&) = delete;
+    FactoryImpl(const FactoryImpl&) = delete;
 
-    Factory& operator=(Factory&&) = delete;
-    Factory& operator=(const Factory&) = delete;
+    FactoryImpl& operator=(FactoryImpl&&) = delete;
+    FactoryImpl& operator=(const FactoryImpl&) = delete;
 
-    mw::service::ProvidedServiceContainer CreateInternalConfigProviderService(
+    mw::service::ProvidedServicesContainer CreateInternalConfigProviderService(
         const std::shared_ptr<data_model::IParameterSetCollection> read_only_parameter_data_interface) const override;
     LastUpdatedParameterSetSender CreateLastUpdatedParameterSetSender(
-        mw::service::ProvidedServiceContainer& services) override;
+        mw::service::ProvidedServicesContainer& services) override;
     InitialQualifierStateSender CreateInitialQualifierStateSender(
-        mw::service::ProvidedServiceContainer& services) override;
+        mw::service::ProvidedServicesContainer& services) override;
 
     std::shared_ptr<data_model::IParameterSetCollectionManager> CreateParameterSetCollectionManager(
         std::vector<std::shared_ptr<IPlugin>>& plugins) const override;
@@ -52,7 +52,8 @@ class Factory final : public IFactory
     std::unique_ptr<IPluginCollector> CreatePluginCollector() const override;
 
   private:
-    std::shared_ptr<common::IJsonHelper> json_helper_;
+    std::unique_ptr<ServiceFactory> service_factory_;
+    std::unique_ptr<InfrastructureFactory> infrastructure_factory_;
 };
 
 }  // namespace config_daemon

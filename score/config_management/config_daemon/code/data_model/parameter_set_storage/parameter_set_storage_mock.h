@@ -30,12 +30,12 @@ namespace data_model
 class ParameterSetStorageMock : public IParameterSetStorage
 {
   public:
-    MOCK_METHOD(Result<void>,
+    MOCK_METHOD(score::Result<void>,
                 StoreParameterSetCollection,
                 (data_model::IParameterSetCollection & collection),
                 (noexcept, override));
 
-    MOCK_METHOD(Result<bool>,
+    MOCK_METHOD(score::Result<bool>,
                 LoadParameterSetCollection,
                 (data_model::IParameterSetCollection & collection),
                 (noexcept, override));

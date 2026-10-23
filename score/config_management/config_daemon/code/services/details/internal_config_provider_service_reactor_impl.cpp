@@ -37,7 +37,7 @@ score::Result<score::cpp::pmr::string> InternalConfigProviderServiceReactorImpl:
     if (!param_set_result.has_value())
     {
         mw::log::LogError() << __func__ << ": Key not found";
-        return MakeUnexpected<score::cpp::pmr::string>(param_set_result.error());
+        return score::MakeUnexpected<score::cpp::pmr::string>(param_set_result.error());
     }
 
     return param_set_result;

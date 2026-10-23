@@ -13,6 +13,7 @@
 #ifndef SCORE_CONFIG_MANAGEMENT_CONFIG_PROVIDER_CODE_PROXIES_INTERNAL_CONFIG_PROVIDER_H
 #define SCORE_CONFIG_MANAGEMENT_CONFIG_PROVIDER_CODE_PROXIES_INTERNAL_CONFIG_PROVIDER_H
 
+#include "score/config_management/config_provider/code/config_provider/factory/buffer_size_report.h"
 #include "score/config_management/config_provider/code/config_provider/initial_qualifier_state_types.h"
 
 #include "score/json/internal/model/any.h"
@@ -22,6 +23,7 @@
 #include <score/stop_token.hpp>
 
 #include <chrono>
+#include <cstddef>
 #include <string_view>
 
 namespace score
@@ -46,7 +48,9 @@ class IInternalConfigProvider
     IInternalConfigProvider& operator=(IInternalConfigProvider&&) = delete;
 
     virtual Result<json::Any> GetParameterSet(const std::string_view set_name,
-                                              const std::chrono::milliseconds timeout) const = 0;
+                                              const std::chrono::milliseconds timeout,
+                                              const AdditionalShmSizing& sizing) const = 0;
+
     virtual bool TrySubscribeToLastUpdatedParameterSetEvent(const score::cpp::stop_token& stop_token,
                                                             OnChangedParameterSetCallback&& callback) = 0;
 

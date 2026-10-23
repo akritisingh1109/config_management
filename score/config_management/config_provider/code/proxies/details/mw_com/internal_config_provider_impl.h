@@ -13,8 +13,9 @@
 #ifndef SCORE_CONFIG_MANAGEMENT_CONFIG_PROVIDER_CODE_PROXIES_DETAILS_MW_COM_INTERNAL_CONFIG_PROVIDER_IMPL_H
 #define SCORE_CONFIG_MANAGEMENT_CONFIG_PROVIDER_CODE_PROXIES_DETAILS_MW_COM_INTERNAL_CONFIG_PROVIDER_IMPL_H
 
-#include "score/config_management/config_provider/code/proxies/details/mw_com/generated_service/internal_config_provider_type.h"
+#include "score/config_management/config_provider/code/config_provider/factory/buffer_size_report.h"
 #include "score/config_management/config_provider/code/proxies/internal_config_provider.h"
+#include "score/config_management/lib/mw_com_types/internal_config_provider_type.h"
 
 #include "score/concurrency/condition_variable.h"
 
@@ -41,6 +42,7 @@ class InternalConfigProvider final : public IInternalConfigProvider
 {
   public:
     using InternalMwComProxy = ::score::mw::com::AsProxy<score::config_management::config_daemon::InternalConfigProviderInterface>;
+    using IInternalConfigProvider::GetParameterSet;
 
     explicit InternalConfigProvider(std::unique_ptr<InternalMwComProxy> proxy);
 
@@ -51,7 +53,8 @@ class InternalConfigProvider final : public IInternalConfigProvider
     ~InternalConfigProvider() noexcept override;
 
     Result<json::Any> GetParameterSet(const std::string_view set_name,
-                                      const std::chrono::milliseconds timeout) const override;
+                                      const std::chrono::milliseconds timeout,
+                                      const AdditionalShmSizing& sizing) const override;
     bool TrySubscribeToLastUpdatedParameterSetEvent(const score::cpp::stop_token& stop_token,
                                                     OnChangedParameterSetCallback&& callback) override;
 
@@ -77,7 +80,7 @@ class InternalConfigProvider final : public IInternalConfigProvider
 
     std::size_t max_samples_limit_;
     std::chrono::milliseconds polling_cycle_interval_;
-    concurrency::InterruptibleConditionalVariable polling_routine_cv_;
+    score::concurrency::InterruptibleConditionalVariable polling_routine_cv_;
     score::cpp::pmr::unordered_set<std::string> last_updated_parameter_set_names_;
     mutable std::mutex mutex_;
     // We intentionally put the jthread as last member since this ensures that upon destruction of our class

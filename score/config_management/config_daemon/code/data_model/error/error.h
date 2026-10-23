@@ -42,7 +42,7 @@ enum class DataModelError : score::result::ErrorCode
     kFailedToPersistParameterSetCollection,
 };
 
-/// @brief ADL overload to fulfill design requirements from lib/result
+/// @brief ADL overload to fulfill design requirements from score/result
 score::result::Error MakeError(const DataModelError code, const std::string_view user_message = "") noexcept;
 
 }  // namespace data_model

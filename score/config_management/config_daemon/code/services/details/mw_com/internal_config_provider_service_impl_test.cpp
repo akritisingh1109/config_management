@@ -39,7 +39,7 @@ class InternalConfigProviderServiceMwComTest : public ::testing::Test
     static void SetUpTestSuite()
     {
         score::mw::com::runtime::RuntimeConfiguration runtime_configuration{
-            "./score/config_management/config_daemon/code/services/details/mw_com/mw_com_config.json"};
+            "./score/config_management/config_daemon/config/mw_com_config.json"};
         score::mw::com::runtime::InitializeRuntime(runtime_configuration);
     }
     void SetUp() override
@@ -54,16 +54,15 @@ TEST_F(InternalConfigProviderServiceMwComTest, StartService)
     RecordProperty("Priority", "3");
     RecordProperty("DerivationTechnique", "Analysis of boundary values");
     RecordProperty("TestType", "Interface test");
-    RecordProperty("Verifies",
-                   "::score::config_management::config_daemon::InternalConfigProviderService::StartService()");
+    RecordProperty("Verifies", "::score::config_management::config_daemon::InternalConfigProviderService::Start()");
     RecordProperty("Description",
-                   "This test ensures StartService method of InternalConfigProviderService would trigger OfferService "
+                   "This test ensures Start() method of InternalConfigProviderService would trigger OfferService "
                    "of InternalConfigProviderSkeleton");
     auto instance_specifier = kICPServiceInstanceSpecifierName;
 
     auto result = InternalConfigProviderService::Create(reactor_mock_, instance_specifier);
     ASSERT_TRUE(result.has_value());
-    result.value().StartService();
+    ASSERT_TRUE(result.value()->Start().has_value());
 }
 
 TEST_F(InternalConfigProviderServiceMwComTest, StopService)
@@ -71,15 +70,15 @@ TEST_F(InternalConfigProviderServiceMwComTest, StopService)
     RecordProperty("Priority", "3");
     RecordProperty("DerivationTechnique", "Analysis of boundary values");
     RecordProperty("TestType", "Interface test");
-    RecordProperty("Verifies", "::score::config_management::config_daemon::InternalConfigProviderService::StopService()");
+    RecordProperty("Verifies", "::score::config_management::config_daemon::InternalConfigProviderService::Stop()");
     RecordProperty("Description",
-                   "This test ensures StopService method of InternalConfigProviderService would trigger "
+                   "This test ensures Stop() method of InternalConfigProviderService would trigger "
                    "StopOfferService of InternalConfigProviderSkeleton");
     auto instance_specifier = kICPServiceInstanceSpecifierName;
 
     auto result = InternalConfigProviderService::Create(reactor_mock_, instance_specifier);
     ASSERT_TRUE(result.has_value());
-    result.value().StopService();
+    result.value()->Stop();
 }
 
 TEST_F(InternalConfigProviderServiceMwComTest, SetInitialQualifierState_AllEnumValues)
@@ -94,7 +93,7 @@ TEST_F(InternalConfigProviderServiceMwComTest, SetInitialQualifierState_AllEnumV
 
     auto result = InternalConfigProviderService::Create(reactor_mock_, instance_specifier);
     ASSERT_TRUE(result.has_value());
-    auto& service = result.value();
+    auto& service = *result.value();
 
     service.SetInitialQualifierState(InitialQualifierState::kDefault);
     service.SetInitialQualifierState(InitialQualifierState::kInProgress);
@@ -119,9 +118,9 @@ TEST_F(InternalConfigProviderServiceMwComTest, SendLastUpdatedParameterSetReturn
 
     auto result = InternalConfigProviderService::Create(reactor_mock_, instance_specifier);
     ASSERT_TRUE(result.has_value());
-    auto& service = result.value();
+    auto& service = *result.value();
 
-    service.StartService();
+    ASSERT_TRUE(service.Start().has_value());
 
     EXPECT_TRUE(service.SendLastUpdatedParameterSet("TestSet"));
 }
@@ -140,7 +139,7 @@ TEST_F(InternalConfigProviderServiceMwComTest, SendLastUpdatedParameterSetReturn
 
     auto result = InternalConfigProviderService::Create(reactor_mock_, instance_specifier);
     ASSERT_TRUE(result.has_value());
-    auto& service = result.value();
+    auto& service = *result.value();
 
     EXPECT_FALSE(service.SendLastUpdatedParameterSet("TestSet"));
 }

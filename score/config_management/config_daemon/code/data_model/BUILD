@@ -28,7 +28,6 @@ cc_library(
         "//score/config_management/config_daemon/code/data_model:parameter_set_qualifier",
         "//score/config_management/config_daemon/code/data_model/parameterset_collection_interfaces:read_only_parameterset_collection",
         "@score_baselibs//score/json",
-        "@score_baselibs//score/result",
     ],
 )
 

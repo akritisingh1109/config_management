@@ -40,6 +40,14 @@ enum class ConfigProviderError : score::result::ErrorCode
     kMethodNotSupported,
     kFailedToSubscribe,
     kParameterSetNotFound,
+    kParameterSetNameTooLong,
+    kMethodArgumentAllocationFailed,
+    kGetParameterSetCallFailed,
+    kParameterSetPayloadTooLarge,
+    kBufferSizeReportNotFound,
+    kBufferSizeReportParsingFailed,
+    kParameterSetNotInBufferSizeReport,
+    kJsonParserNotProvided,
 };
 
 /// @brief ADL overload to fulfill design requirements from lib/result

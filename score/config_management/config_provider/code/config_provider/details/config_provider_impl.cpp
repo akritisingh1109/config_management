@@ -12,8 +12,8 @@
 // *******************************************************************************
 #include "score/config_management/config_provider/code/config_provider/details/config_provider_impl.h"
 #include "score/config_management/config_provider/code/config_provider/error/error.h"
-#include "score/concurrency/future/interruptible_promise.h"
 #include "score/json/json_parser.h"
+#include "score/concurrency/future/interruptible_promise.h"
 
 #include "score/config_management/config_provider/code/config_provider/initial_qualifier_state_types.h"
 #include <score/memory.hpp>
@@ -53,13 +53,15 @@ ConfigProviderImpl::ConfigProviderImpl(
     score::cpp::optional<std::chrono::milliseconds> polling_cycle_interval,
     IsAvailableNotificationCallback callback,
     score::cpp::pmr::unique_ptr<Persistency> persistency,
-    score::cpp::optional<score::cpp::pmr::vector<std::string_view>> initial_parameter_set_name_list)
+    score::cpp::optional<score::cpp::pmr::vector<std::string_view>> initial_parameter_set_name_list,
+    AdditionalShmSizing sizing)
     : ConfigProvider(),
       logger_{mw::log::CreateLogger(std::string_view{"CfgP"})},
       parameter_sets_{ParameterMap::allocator_type{memory_resource}},  // LCOV_EXCL_LINE optimized by compiler
       initial_qualifier_state_{InitialQualifierState::kUndefined},
       memory_resource_{memory_resource},
       internal_config_provider_{},
+      sizing_{sizing},
       persistency_{std::move(persistency)},
       client_handlers_{ClientHandlersMap::allocator_type{memory_resource}},  // LCOV_EXCL_LINE optimized by compiler
       max_samples_limit_{max_samples_limit},
@@ -339,7 +341,7 @@ Result<std::shared_ptr<const ParameterSet>> ConfigProviderImpl::GetParameterSetF
     // NOTE: we assume here that `mutex_` got already acquired by the caller!
     logger_.LogDebug() << __func__ << " [" << set_name << "]: timeout: " << timeout;
 
-    auto parameter_set_result = internal_config_provider.GetParameterSet(set_name, timeout);
+    auto parameter_set_result = internal_config_provider.GetParameterSet(set_name, timeout, sizing_);
     if (not(parameter_set_result.has_value()))
     {
         logger_.LogError() << __func__ << " [" << set_name

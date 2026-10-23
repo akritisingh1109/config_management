@@ -30,17 +30,17 @@ namespace data_model
 class Parameter
 {
   public:
-    const json::Any& GetValue() const
+    const score::json::Any& GetValue() const
     {
         return value_;
     }
-    void SetValue(json::Any&& value)
+    void SetValue(score::json::Any&& value)
     {
         value_ = std::move(value);
     }
 
   private:
-    json::Any value_;
+    score::json::Any value_;
 };
 }  // namespace data_model
 }  // namespace config_daemon

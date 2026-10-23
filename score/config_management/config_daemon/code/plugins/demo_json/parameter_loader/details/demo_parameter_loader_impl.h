@@ -14,8 +14,8 @@
 #define SCORE_CONFIG_MANAGEMENT_CONFIG_DAEMON_CODE_PLUGINS_DEMO_JSON_PARAMETER_LOADER_DETAILS_DEMO_PARAMETER_LOADER_IMPL_H
 
 #include "score/config_management/config_daemon/code/plugins/demo_json/parameter_loader/demo_parameter_loader.h"
-#include "score/result/result.h"
 #include "score/mw/log/logger.h"
+#include "score/result/result.h"
 
 #include "score/json/internal/model/any.h"
 
@@ -33,7 +33,7 @@ namespace demo_json
 class DemoParameterLoaderImpl final : public DemoParameterLoader
 {
   public:
-    explicit DemoParameterLoaderImpl(score::Result<json::Any>&& demo_parameters_data);
+    explicit DemoParameterLoaderImpl(score::Result<score::json::Any>&& demo_parameters_data);
 
     DemoParameterLoaderImpl(DemoParameterLoaderImpl&&) = delete;
     DemoParameterLoaderImpl(const DemoParameterLoaderImpl&) = delete;
@@ -47,7 +47,7 @@ class DemoParameterLoaderImpl final : public DemoParameterLoader
         const std::shared_ptr<data_model::IParameterSetCollection> parameter_set_collection) override;
 
   private:
-    score::Result<json::Any> demo_parameters_data_;
+    score::Result<score::json::Any> demo_parameters_data_;
     mw::log::Logger& logger_;
 };
 

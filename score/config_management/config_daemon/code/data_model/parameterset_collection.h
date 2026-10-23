@@ -40,20 +40,20 @@ class IParameterSetCollection : public IReadOnlyParameterSetCollection
     IParameterSetCollection& operator=(const IParameterSetCollection&) & noexcept = delete;
     ~IParameterSetCollection() noexcept override;
 
-    virtual Result<void> Insert(const score::cpp::string_view set_name,
-                                const score::cpp::string_view parameter_name,
-                                json::Any&& parameter_value) noexcept = 0;
-    virtual Result<void> UpdateParameterSet(const score::cpp::string_view set_name, const score::cpp::string_view set) = 0;
+    virtual score::Result<void> Insert(const score::cpp::string_view set_name,
+                                       const score::cpp::string_view parameter_name,
+                                       score::json::Any&& parameter_value) noexcept = 0;
+    virtual score::Result<void> UpdateParameterSet(const score::cpp::string_view set_name, const score::cpp::string_view set) = 0;
     virtual bool SetCalibratable(const score::cpp::string_view set_name, const bool is_calibratable) const noexcept = 0;
 
     virtual score::Result<score::config_management::config_daemon::ParameterSetQualifier> GetParameterSetQualifier(
         const score::cpp::string_view set_name) const = 0;
-    virtual Result<void> SetParameterSetQualifier(
+    virtual score::Result<void> SetParameterSetQualifier(
         const score::cpp::string_view set_name,
         const score::config_management::config_daemon::ParameterSetQualifier qualifier) = 0;
 
     /// @brief Returns a JSON representation of all parameter sets in this collection.
-    virtual score::Result<json::Object> GetParameterSetCollectionAsJson() const noexcept = 0;
+    virtual score::Result<score::json::Object> GetParameterSetCollectionAsJson() const noexcept = 0;
 };
 
 }  // namespace data_model

@@ -29,7 +29,7 @@ title "ConfigDaemon static architecture"
 
 skinparam linetype ortho
 
-class "mw::service::ProvidedServiceContainer" as ProvidedServiceContainer
+class "mw::service::ProvidedServicesContainer" as ProvidedServicesContainer
 class "mw::lifecycle::Application" as Application
 class "json::IJsonWriter" as IJsonWriter
 class PluginCollector
@@ -42,10 +42,10 @@ Application <|-- IConfigDaemon
 ConfigDaemon *-- IParameterSetCollection
 ConfigDaemon *-- IPlugin
 PluginCollector -left-> IPlugin
-ConfigDaemon *-- ProvidedServiceContainer
+ConfigDaemon *-- ProvidedServicesContainer
 ConfigDaemon --> PluginCollector
 
-ProvidedServiceContainer o-- InternalConfigProviderService
+ProvidedServicesContainer o-- InternalConfigProviderService
 InternalConfigProviderService *-- InternalConfigProviderServiceReactorImpl
 InternalConfigProviderServiceReactorImpl o-- IReadOnlyParameterSetCollection
 

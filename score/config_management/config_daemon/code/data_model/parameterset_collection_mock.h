@@ -30,13 +30,16 @@ namespace data_model
 class ParameterSetCollectionMock final : public IParameterSetCollection
 {
   public:
-    MOCK_METHOD(Result<void>,
+    MOCK_METHOD(score::Result<void>,
                 Insert,
-                (const score::cpp::string_view, const score::cpp::string_view, json::Any&&),
+                (const score::cpp::string_view, const score::cpp::string_view, score::json::Any&&),
                 (noexcept, override));
-    MOCK_METHOD(Result<void>, UpdateParameterSet, (const score::cpp::string_view, const score::cpp::string_view set), (override));
-    MOCK_METHOD(Result<score::cpp::pmr::string>, GetParameterSet, (const std::string_view set_name), (const, override));
-    MOCK_METHOD(Result<json::Any>,
+    MOCK_METHOD(score::Result<void>,
+                UpdateParameterSet,
+                (const score::cpp::string_view, const score::cpp::string_view set),
+                (override));
+    MOCK_METHOD(score::Result<score::cpp::pmr::string>, GetParameterSet, (const std::string_view set_name), (const, override));
+    MOCK_METHOD(score::Result<score::json::Any>,
                 GetParameterFromSet,
                 (const score::cpp::string_view set_name, const score::cpp::string_view parameter_name),
                 (const, override));
@@ -48,11 +51,11 @@ class ParameterSetCollectionMock final : public IParameterSetCollection
                 GetParameterSetQualifier,
                 (const score::cpp::string_view set_name),
                 (const, override));
-    MOCK_METHOD(Result<void>,
+    MOCK_METHOD(score::Result<void>,
                 SetParameterSetQualifier,
                 (const score::cpp::string_view set_name, const score::config_management::config_daemon::ParameterSetQualifier qualifier),
                 (override));
-    MOCK_METHOD(score::Result<json::Object>, GetParameterSetCollectionAsJson, (), (const, noexcept, override));
+    MOCK_METHOD(score::Result<score::json::Object>, GetParameterSetCollectionAsJson, (), (const, noexcept, override));
 };
 
 }  // namespace data_model

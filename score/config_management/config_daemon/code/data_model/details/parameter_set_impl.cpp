@@ -14,8 +14,7 @@
 #include "score/config_management/config_daemon/code/data_model/details/parameter_set_impl.h"
 #include "score/config_management/config_daemon/code/data_model/details/common.h"
 #include "score/config_management/config_daemon/code/data_model/error/error.h"
-
-#include "score/json/json_writer.h"
+#include "score/config_management/lib/parameter_set_json_serializer/details/parameter_set_json_serializer_impl.h"
 
 namespace score
 {
@@ -26,16 +25,16 @@ namespace config_daemon
 namespace data_model
 {
 
-ParameterSet::ParameterSet(std::unique_ptr<json::IJsonWriter> json_writer)
+ParameterSet::ParameterSet()
     : logger_{mw::log::CreateLogger(std::string_view("DtMd"))},
       data_{},
-      json_writer_{std::move(json_writer)},
+      json_serializer_{std::make_unique<score::config_management::ParameterSetJsonSerializerImpl>()},
       qualifier_{},
       is_calibratable_{false}
 {
 }
 
-Result<void> ParameterSet::Add(const score::cpp::string_view parameter_name, json::Any&& parameter_value)
+score::Result<void> ParameterSet::Add(const score::cpp::string_view parameter_name, score::json::Any&& parameter_value)
 {
     Parameter parameter;
     parameter.SetValue(std::move(parameter_value));
@@ -49,12 +48,13 @@ Result<void> ParameterSet::Add(const score::cpp::string_view parameter_name, jso
     {
         logger_.LogError() << "ParameterSet::" << __func__ << "parameter with name: " << parameter_name
                            << "already exists in parameter set";
-        return MakeUnexpected(DataModelError::kParameterAlreadyExists, "Parameter already exist in parameter set");
+        return score::MakeUnexpected(DataModelError::kParameterAlreadyExists,
+                                     "Parameter already exist in parameter set");
     }
-    return Result<void>{};
+    return score::Result<void>{};
 }
 
-Result<void> ParameterSet::Update(json::Object&& parameters)
+score::Result<void> ParameterSet::Update(score::json::Object&& parameters)
 {
     // check if the parameter set is calibratable
     if (is_calibratable_)
@@ -82,38 +82,32 @@ Result<void> ParameterSet::Update(json::Object&& parameters)
                 data_[parameter_name].SetValue(std::move(param.second));
                 logger_.LogInfo() << __func__ << "parameter with name:" << parameter_name << "updated";
             }
-            return Result<void>{};
+            return score::Result<void>{};
         }
         else
         {
-            return MakeUnexpected(DataModelError::kParametersNotFound, "Some parameters are not found");
+            return score::MakeUnexpected(DataModelError::kParametersNotFound, "Some parameters are not found");
         }
     }
     else
     {
-        return MakeUnexpected(DataModelError::kParameterSetNotCalibratable, "ParameterSet is not calibratable");
+        return score::MakeUnexpected(DataModelError::kParameterSetNotCalibratable, "ParameterSet is not calibratable");
     }
 }
 
-Result<score::cpp::pmr::string> ParameterSet::GetParameterSetAsString() const
+score::Result<score::cpp::pmr::string> ParameterSet::GetParameterSetAsString() const
 {
-    auto result = json_writer_->ToBuffer(GetParameterSetAsJson());
-    if (not result.has_value())
-    {
-        const auto error = result.error().Message();
-        return MakeUnexpected(DataModelError::kConvertingError, error);
-    }
-    return result.value().c_str();
+    return json_serializer_->SerializeParameterSet(GetParametersAsJson(), score::cpp::to_underlying(qualifier_));
 }
 
-Result<json::Any> ParameterSet::GetParameter(const score::cpp::string_view parameter_name)
+score::Result<score::json::Any> ParameterSet::GetParameter(const score::cpp::string_view parameter_name)
 {
     auto iter = data_.find(AsString(parameter_name));
     if (iter == data_.end())
     {
         logger_.LogError() << "ParameterSet::" << __func__ << "parameter with name: " << parameter_name
                            << "does not exist";
-        return MakeUnexpected<json::Any>(DataModelError::kParameterMissedError);
+        return score::MakeUnexpected<score::json::Any>(DataModelError::kParameterMissedError);
     }
     else
     {
@@ -121,16 +115,21 @@ Result<json::Any> ParameterSet::GetParameter(const score::cpp::string_view param
     }
 }
 
-json::Object ParameterSet::GetParameterSetAsJson() const
+score::json::Object ParameterSet::GetParametersAsJson() const
 {
-    json::Object parameter_set;
-    json::Object parameters;
+    score::json::Object parameters;
     for (const auto& parameter : data_)
     {
         parameters[parameter.first.c_str()] = parameter.second.GetValue().CloneByValue();
     }
-    parameter_set["parameters"] = std::move(parameters);
-    json::Any qualifier{score::cpp::to_underlying(qualifier_)};
+    return parameters;
+}
+
+score::json::Object ParameterSet::GetParameterSetAsJson() const
+{
+    score::json::Object parameter_set;
+    parameter_set["parameters"] = GetParametersAsJson();
+    score::json::Any qualifier{score::cpp::to_underlying(qualifier_)};
     parameter_set["qualifier"] = std::move(qualifier);
 
     return parameter_set;
