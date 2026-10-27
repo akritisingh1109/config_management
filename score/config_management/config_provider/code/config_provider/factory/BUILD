@@ -14,6 +14,7 @@ cc_library(
     deps = [
         "@score_baselibs//score/language/futurecpp",
         "@score_communication//score/mw/com",
+        "@score_communication//score/mw/service:find_service_strategy",
         "@score_communication//score/mw/service:proxy_builder_base",
         "@score_logging//score/mw/log",
     ],
