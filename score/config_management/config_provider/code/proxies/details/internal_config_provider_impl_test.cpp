@@ -10,7 +10,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 // *******************************************************************************
-#include "score/config_management/config_provider/code/proxies/details/mw_com/internal_config_provider_impl.h"
+#include "score/config_management/config_provider/code/proxies/details/internal_config_provider_impl.h"
 #include "score/config_management/lib/mw_com_types/internal_config_provider_type.h"
 
 #include "score/config_management/config_provider/code/config_provider/error/error.h"
@@ -51,7 +51,7 @@ class InternalConfigProviderTest : public ::testing::Test
     void SetUp() override
     {
         score::mw::com::runtime::RuntimeConfiguration runtime_configuration{
-            "./score/config_management/config_provider/code/proxies/details/mw_com/"
+            "./score/config_management/config_provider/code/proxies/details/"
             "test_mw_com_config.json"};
         score::mw::com::runtime::InitializeRuntime(runtime_configuration);
 

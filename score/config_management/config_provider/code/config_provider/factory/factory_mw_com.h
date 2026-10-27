@@ -17,7 +17,7 @@
 #include "score/config_management/config_provider/code/config_provider/factory/buffer_size_report.h"
 #include "score/config_management/config_provider/code/config_provider/factory/semi_dynamic_single_instantiation_strategy.h"
 #include "score/config_management/config_provider/code/persistency/details/persistency_impl.h"
-#include "score/config_management/config_provider/code/proxies/details/mw_com/internal_config_provider_impl.h"
+#include "score/config_management/config_provider/code/proxies/details/internal_config_provider_impl.h"
 #include "score/config_management/lib/mw_com_types/internal_config_provider_type.h"
 
 #include "score/json/json_parser.h"
