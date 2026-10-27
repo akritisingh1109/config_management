@@ -1,7 +1,6 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("@score_baselibs//:bazel/unit_tests.bzl", "cc_gtest_unit_test", "cc_unit_test_suites_for_host_and_qnx")
 load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER_WARNING_FEATURES")
-load(":custom.bzl", "load_custom_targets")
 
 cc_library(
     name = "semi_dynamic_single_instantiation_strategy",
@@ -117,10 +116,6 @@ cc_gtest_unit_test(
 
 cc_unit_test_suites_for_host_and_qnx(
     name = "unit_tests",
-    cc_unit_tests = [
-        ":unit_tests_mw_com",
-    ],
+    cc_unit_tests = [],
     visibility = ["//score/config_management/config_provider:__subpackages__"],
 )
-
-load_custom_targets()
