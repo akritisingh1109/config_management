@@ -63,7 +63,7 @@ class ConfigProviderFactoryTest : public ::testing::Test
         buffer_size_report_file.close();
 
         score::mw::com::runtime::RuntimeConfiguration runtime_configuration{
-            "./score/config_management/config_provider/code/proxies/details/mw_com/"
+            "./score/config_management/config_provider/code/proxies/details/"
             "test_mw_com_config.json"};
         score::mw::com::runtime::InitializeRuntime(runtime_configuration);
 
