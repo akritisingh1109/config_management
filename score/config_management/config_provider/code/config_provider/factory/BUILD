@@ -54,10 +54,35 @@ cc_gtest_unit_test(
 )
 
 cc_library(
-    name = "factory_mw_com",
-    srcs = ["factory_mw_com.cpp"],
-    hdrs = ["factory_mw_com.h"],
+    name = "factory_mw_com_for_unit_test",
+    testonly = True,
+    hdrs = ["fake/factory_mw_com.h"],
     features = COMPILER_WARNING_FEATURES,
+    include_prefix = "platform/aas/config_management/config_provider/code/config_provider/factory",
+    strip_include_prefix = "fake",
+    visibility = [
+        "//score/config_management/config_provider:__subpackages__",
+    ],
+    deps = [
+        ":buffer_size_report",
+        "//score/config_management/config_provider/code/config_provider",
+        "//score/config_management/config_provider/code/config_provider:config_provider_mock",
+        "//score/config_management/config_provider/code/config_provider/error",
+        "//score/config_management/config_provider/code/persistency",
+        "//score/config_management/config_provider/code/proxies:internal_config_provider",
+        "@googletest//:gtest",
+        "@score_baselibs//score/language/futurecpp",
+        "@score_communication//score/mw/service:find_service_strategy",
+    ],
+)
+
+cc_library(
+    name = "factory_mw_com",
+    srcs = ["details/factory_mw_com.cpp"],
+    hdrs = ["details/factory_mw_com.h"],
+    features = COMPILER_WARNING_FEATURES,
+    include_prefix = "platform/aas/config_management/config_provider/code/config_provider/factory",
+    strip_include_prefix = "details",
     tags = ["FUSA"],
     visibility = [
         "//score/config_management/config_provider:__subpackages__",

@@ -51,7 +51,7 @@ alias(
 
 alias(
     name = "config_provider_factory_for_unit_test",
-    actual = "//score/config_management/config_provider/code/config_provider/factory:factory_mw_com",
+    actual = "//score/config_management/config_provider/code/config_provider/factory:factory_mw_com_for_unit_test",
     visibility = ["//visibility:public"],
 )
 

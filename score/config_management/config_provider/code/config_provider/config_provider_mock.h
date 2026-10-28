@@ -18,6 +18,8 @@
 #include "score/result/result.h"
 
 #include <score/memory.hpp>
+
+#include <atomic>
 #include <string_view>
 
 #include <gmock/gmock.h>
@@ -33,7 +35,11 @@ class ConfigProviderMock final : public ConfigProvider
 {
   public:
     ConfigProviderMock();
-    ~ConfigProviderMock() noexcept override = default;
+    ~ConfigProviderMock() noexcept override;
+
+    /// @brief Returns the most recently created, still alive mock or nullptr if there is none.
+    /// A unit test uses this to configure the mock the code under test obtained from a fake factory.
+    static ConfigProviderMock* GetLastCreated() noexcept;
 
     MOCK_METHOD(score::Result<std::shared_ptr<const ParameterSet>>,
                 GetParameterSet,
@@ -68,6 +74,8 @@ class ConfigProviderMock final : public ConfigProvider
     MOCK_METHOD(std::size_t, GetCachedParameterSetsCount, (), (const, noexcept, override));
 
   private:
+    inline static std::atomic<ConfigProviderMock*> gLastCreated{nullptr};
+
     std::shared_ptr<const ParameterSet> parameter_set_;
     score::json::Any root_json_;
 };
