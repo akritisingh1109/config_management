@@ -80,10 +80,8 @@ cc_library(
 cc_test(
     name = "unit_tests_mw_com",
     srcs = ["factory_mw_com_test.cpp"],
-    data = ["//score/config_management/config_provider/code/proxies/details:test_mw_com_config"],
     features = COMPILER_WARNING_FEATURES,
     tags = [
-        "exclusive",  # Sandboxing is not properly working with LoLa message passing 2.0 (Ticket-217341)
         "unit",
     ],
     visibility = [
@@ -91,7 +89,11 @@ cc_test(
     ],
     deps = [
         ":factory_mw_com",
+        ":semi_dynamic_single_instantiation_strategy",
+        "//score/config_management/config_provider/code/config_provider/error",
         "//score/config_management/config_provider/code/persistency:mock",
+        "//score/config_management/config_provider/code/proxies:internal_config_provider",
+        "//score/config_management/config_provider/code/proxies:mock",
         "@googletest//:gtest_main",
         "@score_baselibs//score/json:json_parser",
     ],
