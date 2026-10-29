@@ -12,7 +12,7 @@
 # *******************************************************************************
 
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_test")
+load("@rules_cc//cc:defs.bzl", "cc_test")
 load("@score_baselibs//:bazel/unit_tests.bzl", "cc_unit_test_suites_for_host_and_qnx")
 load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER_WARNING_FEATURES")
 load(":custom.bzl", "load_custom_targets", "load_custom_test_suites")
@@ -25,10 +25,7 @@ bool_flag(
 config_setting(
     name = "is_score_variant",
     flag_values = {":score_variant": "true"},
-    visibility = [
-        "//score/config_management/config_daemon:__subpackages__",
-        "//score/config_management/config_provider:__subpackages__",
-    ],
+    visibility = ["//score/config_management/config_daemon:__subpackages__"],
 )
 
 cc_test(
@@ -67,15 +64,3 @@ cc_unit_test_suites_for_host_and_qnx(
 )
 
 load_custom_targets()
-
-cc_binary(
-    name = "config_daemon",
-    srcs = ["main.cpp"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//score/config_management/config_daemon/code/app/details:app",
-        "//score/config_management/config_daemon/code/factory/details:factory_impl",
-        "@score_lifecycle//score/launch_manager:lifecyclemanager_cc",
-        "@score_lifecycle//score/launch_manager:runapplication_cc",
-    ],
-)
