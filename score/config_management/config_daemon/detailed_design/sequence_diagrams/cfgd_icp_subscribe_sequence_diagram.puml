@@ -14,8 +14,8 @@ activate ConfigProvider
 ConfigProvider -> ConfigProvider: RegisterUpdateHandlerForParameterSetName(parameter_set_name, callback)
 
 Plugin -> InternalConfigProviderService: SendLastUpdatedParameterSet(parameter_set_name)
-InternalConfigProviderService -> mwcom : Update(parameter_set_name)
-mwcom -> InternalConfigProviderProxy: trigger callback
+InternalConfigProviderService -> com : Update(parameter_set_name)
+com -> InternalConfigProviderProxy: trigger callback
 InternalConfigProviderProxy -> ConfigProvider: LastUpdatedParameterSetReceiveHandler
 !includesub ../sequence_diagrams/cfgd_icp_get_sequence_diagram.puml!GetParameterSet
 

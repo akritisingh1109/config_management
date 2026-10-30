@@ -12,7 +12,7 @@ participant PluginCreator
 participant Plugin
 participant InternalConfigProviderService
 ' ' !includesub ../sequence_diagrams/startup_procedure_score_details.puml!ParticipantDetails
-participant "mw::com" as ARA
+participant "mw::com" as COM
 
 group Construction stage
 create Factory
@@ -84,8 +84,8 @@ Factory -> InternalConfigProviderService : create (ProvidedServicesContainer::Em
 InternalConfigProviderService --> Factory
 Factory -> InternalConfigProviderService : Start()
 activate InternalConfigProviderService
-InternalConfigProviderService -> ARA : InternalConfigProviderSkeleton::OfferService()
-ARA --> InternalConfigProviderService
+InternalConfigProviderService -> COM : InternalConfigProviderSkeleton::OfferService()
+COM --> InternalConfigProviderService
 InternalConfigProviderService --> Factory
 deactivate InternalConfigProviderService
 Factory --> ConfigDaemon : ProvidedServicesContainer
@@ -104,8 +104,8 @@ ConfigDaemon -> ConfigDaemon: wait_until_stop_requested()
 LifeCycleManager -> ConfigDaemon: request stop
 ConfigDaemon -> InternalConfigProviderService : Stop() (ProvidedServicesContainer::StopAll)
 activate InternalConfigProviderService
-InternalConfigProviderService -> ARA : InternalConfigProviderSkeleton::StopOfferService()
-ARA --> InternalConfigProviderService
+InternalConfigProviderService -> COM : InternalConfigProviderSkeleton::StopOfferService()
+COM --> InternalConfigProviderService
 InternalConfigProviderService --> ConfigDaemon
 deactivate InternalConfigProviderService
 loop For each Plugin

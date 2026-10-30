@@ -16,7 +16,6 @@
   - [4.1 Execution Stages](#41-execution-stages)
   - [4.2 IPC communication](#42-ipc-communication)
 - [5. External Dependencies](#5-external-dependencies)
-- [6. Security Policy](#6-security-policy)
 
 ## 1. Introduction
 
@@ -153,7 +152,7 @@ Computing a build-time budget does not, by itself, guarantee that the shared-mem
 
 Sometimes `Plugin`s inside `ConfigDaemon` need to share some resource, for example proxy instance or service instance. In the current design of `ConfigDaemon`, these resources need to be instantiated by `ConfigDaemon` and distributed to `Plugin`s via parameters in `Run` function.
 
-`FaultEventReporter` is one of such resource. It is used to report Hw/Sw DTC to Degradation Handler via `FaultEventInterfaceRPort`. `FaultEventReporter` class takes care of managing the request from both plugins and forwards the request to `FaultEventProxy` class which in turn reports the DTC to Degradation Handler.
+`FaultEventReporter` is one of such resource. It is used to report OEM specific faults.
 
 <details>
 <summary>FaultEventReporter Static Architecture</summary>

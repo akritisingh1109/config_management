@@ -7,7 +7,7 @@ participant ClientApplication
 !startsub GetParameterSetParticipant
 participant ConfigProvider
 participant InternalConfigProviderProxy
-participant "mw::com" as mwcom
+participant "mw::com" as com
 participant InternalConfigProviderService
 participant InternalConfigProviderServiceReactor
 participant ParameterSetCollection
@@ -23,9 +23,9 @@ else
 !startsub GetParameterSet
 ConfigProvider -> InternalConfigProviderProxy : GetParameterSet(parameter_set_name)
 activate InternalConfigProviderProxy
-InternalConfigProviderProxy -> mwcom : GetParameterSet(parameter_set_name)
-activate mwcom
-mwcom -> InternalConfigProviderService : GetParameterSet(parameter_set_name)
+InternalConfigProviderProxy -> com : GetParameterSet(parameter_set_name)
+activate com
+com -> InternalConfigProviderService : GetParameterSet(parameter_set_name)
 activate InternalConfigProviderService
 InternalConfigProviderService -> InternalConfigProviderServiceReactor : GetParameterSet(parameter_set_name)
 activate InternalConfigProviderServiceReactor
@@ -35,9 +35,9 @@ ParameterSetCollection --> InternalConfigProviderServiceReactor : parameter_set
 deactivate ParameterSetCollection
 InternalConfigProviderServiceReactor --> InternalConfigProviderService : parameter_set
 deactivate InternalConfigProviderServiceReactor
-InternalConfigProviderService --> mwcom : parameter_set
-mwcom --> InternalConfigProviderProxy : parameter_set
-deactivate mwcom
+InternalConfigProviderService --> com : parameter_set
+com --> InternalConfigProviderProxy : parameter_set
+deactivate com
 InternalConfigProviderProxy --> ConfigProvider : parameter_set
 deactivate InternalConfigProviderProxy
 note left: Cache the parameter_set for future requests
