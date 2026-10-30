@@ -25,6 +25,30 @@ cc_library(
     deps = ["//score/config_management/config_provider/code/config_provider/factory:factory_mw_com"],
 )
 
+# Offers the InternalConfigProvider service (mw::com skeleton) to SCTF tests of client applications, so that they
+# can drive their ConfigProvider against a mocked service: boost.python class
+# `InternalConfigProviderMwComSkeleton` (OfferService, SetParameterSet, LoadParameterSets, SetNcdState). The
+# instance specifier is passed at construction, hence it is independent of the client's deployment.
+#
+# This default variant also deploys ConfigDaemon's production buffer_size_report.json to
+# /bmw/platform/opt/ConfigDaemon/etc/ of the SCTF sysroot (the path the client's ConfigProvider reads it from),
+# so clients with hard-coded parameter set names need nothing else. Clients whose parameter set names are
+# determined dynamically use `config_provider_skeleton_for_sctf_no_report` and provide their own
+# buffer_size_report tar - never both, they would collide at the same path.
+alias(
+    name = "config_provider_skeleton_for_sctf",
+    testonly = True,
+    actual = "//score/config_management/config_provider/test/ipnext_com_mock/python_bindings:mw_com_internal_config_provider_skeleton_with_report",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "config_provider_skeleton_for_sctf_no_report",
+    testonly = True,
+    actual = "//score/config_management/config_provider/test/ipnext_com_mock/python_bindings:mw_com_internal_config_provider_skeleton",
+    visibility = ["//visibility:public"],
+)
+
 alias(
     name = "config_provider_factory_for_unit_test",
     actual = "//score/config_management/config_provider/code/config_provider/factory:factory_mw_com",
