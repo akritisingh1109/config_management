@@ -12,7 +12,6 @@
 // *******************************************************************************
 
 #include "score/config_management/config_daemon/code/data_model/parameter_set_storage/details/parameter_set_storage_score_impl.h"
-#include "score/config_management/config_daemon/code/data_model/parameter_set_qualifier.h"
 #include "score/config_management/config_daemon/code/data_model/parameter_set_storage/error/parameter_set_storage_error.h"
 #include "score/config_management/config_daemon/code/data_model/parameterset_collection.h"
 
@@ -47,7 +46,7 @@ ParameterSetStorageScoreImpl::ParameterSetStorageScoreImpl(std::unique_ptr<score
 score::Result<void> ParameterSetStorageScoreImpl::StoreParameterSetCollection(
     data_model::IParameterSetCollection& collection) noexcept
 {
-    // Collect all parameter sets into a JSON object, overriding qualifier to kQualifying.
+    // Collect all parameter sets into a JSON object, dropping the runtime-only qualifier.
     score::json::JsonWriter json_writer{};
     auto collection_json_result = collection.GetParameterSetCollectionAsJson();
     if (!collection_json_result.has_value())
@@ -61,8 +60,7 @@ score::Result<void> ParameterSetStorageScoreImpl::StoreParameterSetCollection(
         const auto set_object = entry.second.As<score::json::Object>();
         if (set_object.has_value())
         {
-            set_object.value().get()["qualifier"] =
-                score::json::Any{score::cpp::to_underlying(ParameterSetQualifier::kQualifying)};
+            set_object.value().get().erase("qualifier");
         }
     }
 
