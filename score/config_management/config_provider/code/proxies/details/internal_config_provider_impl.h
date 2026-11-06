@@ -14,6 +14,7 @@
 #define SCORE_CONFIG_MANAGEMENT_CONFIG_PROVIDER_CODE_PROXIES_DETAILS_INTERNAL_CONFIG_PROVIDER_IMPL_H
 
 #include "score/config_management/config_provider/code/config_provider/factory/buffer_size_report.h"
+#include "score/config_management/config_provider/code/proxies/details/internal_config_provider_proxy.h"
 #include "score/config_management/config_provider/code/proxies/internal_config_provider.h"
 #include "score/config_management/lib/mw_com_types/internal_config_provider_type.h"
 
@@ -40,7 +41,7 @@ namespace config_provider
 class InternalConfigProvider final : public IInternalConfigProvider
 {
   public:
-    using InternalMwComProxy = ::score::mw::com::AsProxy<score::config_management::config_daemon::InternalConfigProviderInterface>;
+    using InternalMwComProxy = InternalConfigProviderProxy;
     using IInternalConfigProvider::GetParameterSet;
 
     explicit InternalConfigProvider(std::unique_ptr<InternalMwComProxy> proxy);
@@ -85,7 +86,8 @@ class InternalConfigProvider final : public IInternalConfigProvider
     // We intentionally put the jthread as last member since this ensures that upon destruction of our class
     // we first wait for the jthread to finish prior to destroying any other member which it might still access.
     score::cpp::optional<score::cpp::jthread> polling_thread_;
-    mutable score::config_management::config_daemon::mw_com_icp_types::InitialQualifierState initial_qualifier_state_;
+    mutable score::config_management::config_daemon::mw_com_icp_types::InitialQualifierState initial_qualifier_state_{
+        score::config_management::config_daemon::mw_com_icp_types::InitialQualifierState::kUndefined};
 };
 
 }  // namespace config_provider

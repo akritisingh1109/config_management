@@ -15,6 +15,7 @@
 #define SCORE_CONFIG_MANAGEMENT_CONFIG_DAEMON_CODE_SERVICES_DETAILS_INTERNAL_CONFIG_PROVIDER_SERVICE_IMPL_H
 
 #include "score/config_management/config_daemon/code/data_model/parameterset_collection_interfaces/read_only_parameterset_collection.h"
+#include "score/config_management/config_daemon/code/services/details/internal_config_provider_skeleton.h"
 #include "score/config_management/config_daemon/code/services/internal_config_provider_service.h"
 #include "score/config_management/config_daemon/code/services/internal_config_provider_service_reactor.h"
 #include "score/config_management/lib/mw_com_types/internal_config_provider_type.h"
@@ -29,8 +30,6 @@ namespace config_management
 namespace config_daemon
 {
 
-using InternalConfigProviderSkeleton = score::mw::com::AsSkeleton<InternalConfigProviderInterface>;
-
 class InternalConfigProviderService final : public IInternalConfigProviderService
 {
   public:
@@ -39,6 +38,9 @@ class InternalConfigProviderService final : public IInternalConfigProviderServic
         const score::mw::com::InstanceSpecifier& instance_specifier);
     InternalConfigProviderService(InternalConfigProviderService&&) noexcept = delete;
     InternalConfigProviderService(const InternalConfigProviderService&) noexcept = delete;
+    InternalConfigProviderService& operator=(InternalConfigProviderService&&) noexcept = delete;
+    InternalConfigProviderService& operator=(const InternalConfigProviderService&) noexcept = delete;
+    ~InternalConfigProviderService() noexcept override = default;
 
     void SetInitialQualifierState(const config_daemon::InitialQualifierState initial_qualifier_state) noexcept override;
     bool SendLastUpdatedParameterSet(const std::string_view parameter_set_name) noexcept override;

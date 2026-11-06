@@ -96,6 +96,7 @@ cc_test(
         (
             "_impl",
             [
+                ":internal_config_provider_skeleton",
                 "//score/config_management/config_daemon/code/services:internal_config_provider_reactor",
                 "//score/config_management/config_daemon/code/data_model/parameterset_collection_interfaces:read_only_parameterset_collection",
                 "@score_baselibs//score/result",
@@ -106,6 +107,7 @@ cc_test(
         (
             "_for_unit_test",
             [
+                ":internal_config_provider_skeleton_fake_for_unit_test",
                 "//score/config_management/config_daemon/code/services:internal_config_provider_reactor_mock",
                 "//score/config_management/config_daemon/code/data_model/parameterset_collection_interfaces:read_only_parameterset_collection",
             ],
@@ -114,20 +116,42 @@ cc_test(
     ]
 ]
 
+cc_library(
+    name = "internal_config_provider_skeleton",
+    hdrs = ["internal_config_provider_skeleton.h"],
+    features = COMPILER_WARNING_FEATURES,
+    tags = ["FUSA"],
+    visibility = ["//score/config_management/config_daemon/code:__subpackages__"],
+    deps = [
+        "//score/config_management/lib/mw_com_types:internal_config_provider_type",
+        "@score_communication//score/mw/com",
+    ],
+)
+
+cc_library(
+    name = "internal_config_provider_skeleton_fake_for_unit_test",
+    testonly = True,
+    hdrs = ["fake/internal_config_provider_skeleton.h"],
+    features = COMPILER_WARNING_FEATURES,
+    include_prefix = "platform/aas/config_management/config_daemon/code/services/details",
+    strip_include_prefix = "fake",
+    visibility = ["//score/config_management/config_daemon/code:__subpackages__"],
+    deps = [
+        "//score/config_management/lib/mw_com_types:internal_config_provider_type",
+        "@score_baselibs//score/result",
+        "@score_communication//score/mw/com",
+    ],
+)
+
 cc_test(
     name = "unit_test_internal_config_provider_service_impl",
     srcs = [
         "internal_config_provider_service_impl_test.cpp",
     ],
-    data = ["//score/config_management/config_daemon/config:mw_com_config"],
     features = COMPILER_WARNING_FEATURES + [
         "aborts_upon_exception",
     ],
-    tags = [
-        "exclusive",  # Sandboxing is not properly working with LoLa message passing 2.0 (Ticket-217341)
-        "mw_com",
-        "unit",
-    ],
+    tags = ["unit"],
     visibility = ["//score/config_management/config_daemon/code/services/details:__pkg__"],
     deps = [
         ":internal_config_provider_service_for_unit_test",

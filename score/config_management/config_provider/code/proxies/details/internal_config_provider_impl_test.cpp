@@ -10,22 +10,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 // *******************************************************************************
+
 #include "score/config_management/config_provider/code/proxies/details/internal_config_provider_impl.h"
-#include "score/config_management/lib/mw_com_types/internal_config_provider_type.h"
 
 #include "score/config_management/config_provider/code/config_provider/error/error.h"
-
-#include "score/concurrency/notification.h"
-
-#include "score/mw/com/runtime.h"
-#include "score/mw/com/runtime_configuration.h"
+#include "score/config_management/lib/mw_com_types/internal_config_provider_type.h"
 
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <future>
-
-#include <iostream>
-#include <stdexcept>
+#include <limits>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <tuple>
 
 namespace score
 {
@@ -38,95 +37,42 @@ namespace
 {
 
 const std::chrono::milliseconds kZeroTimeout{0};
-
-const std::string kProxyICPSpecifier{
-    "ConfigDaemonCustomer/ConfigDaemonCustomer_RootSwc/InternalConfigProviderAppRPort"};
-const std::string kSkeletonICPSpecifier{
-    "ConfigDaemonCustomer/ConfigDaemonCustomer_RootSwc/InternalConfigProviderAppPPort"};
-using MwComSkeleton = score::mw::com::AsSkeleton<score::config_management::config_daemon::InternalConfigProviderInterface>;
+const AdditionalShmSizing kSizing{/*max_payload_size=*/64U, /*max_name_length=*/16U};
 using MwComInitialQualifierStateType = score::config_management::config_daemon::mw_com_icp_types::InitialQualifierState;
 
 class InternalConfigProviderTest : public ::testing::Test
 {
   protected:
-    using MWProxy = InternalConfigProvider::InternalMwComProxy;
-
     void SetUp() override
     {
-        score::mw::com::runtime::RuntimeConfiguration runtime_configuration{
-            "./score/config_management/config_provider/code/proxies/details/"
-            "test_mw_com_config.json"};
-        score::mw::com::runtime::InitializeRuntime(runtime_configuration);
-
-        skeleton_ = CreateService();
-
-        std::ignore = skeleton_->initial_qualifier_state.Update(MwComInitialQualifierStateType::kUndefined);
-        auto offer_result = skeleton_->OfferService();
-        if (!offer_result.has_value())
-        {
-            throw std::runtime_error(std::string("OfferService() failed: ") +
-                                     std::string(offer_result.error().Message()));
-        }
-        auto proxy = CreateProxy();
-        // proxy_mock_ = proxy.get();
+        auto proxy = std::make_unique<InternalConfigProvider::InternalMwComProxy>();
+        state_ = proxy->GetState();
         unit_ = std::make_unique<InternalConfigProvider>(std::move(proxy));
     }
 
-    void TearDown() override
-    {
-        // unit_->StopParameterSetUpdatePollingRoutine();
-        // EXPECT_CALL(proxy_mock_->LastUpdatedParameterSet, Unsubscribe());
-    }
-
-    std::unique_ptr<MwComSkeleton> CreateService() const
-    {
-        // Prepare skeleton to offer the service
-        auto instance_specifier_result = score::mw::com::InstanceSpecifier::Create(std::string(kSkeletonICPSpecifier));
-        // ASSERT_TRUE(instance_specifier_result.has_value());
-
-        auto service_result = MwComSkeleton::Create(std::move(instance_specifier_result).value());
-        // ASSERT_TRUE(service_result.has_value());
-        auto& service = service_result.value();
-        // The generated skeleton requires every declared method to have a registered handler before
-        // OfferService() is called, otherwise SkeletonBase::VerifyAllMethodsRegistered() silently fails
-        // with a generic kBindingFailure. This test does not exercise get_parameter_set() itself, so a
-        // minimal handler that never resolves anything is sufficient to satisfy that precondition.
-        auto handler = [](score::config_management::config_daemon::mw_com_icp_types::ParameterSetContent&,
-                          const score::config_management::config_daemon::mw_com_icp_types::ParameterSetName&,
-                          const std::size_t&) {};
-        std::ignore = service.get_parameter_set.RegisterHandler(std::move(handler));
-        return std::make_unique<MwComSkeleton>(std::move(service));
-    }
-
-    std::unique_ptr<MWProxy> CreateProxy() const
-    {
-        auto instance_specifier_result = score::mw::com::InstanceSpecifier::Create(std::string(kProxyICPSpecifier));
-
-        const auto proxy_handles_result = MWProxy::FindService(std::move(instance_specifier_result).value());
-        const auto& proxy_handles = proxy_handles_result.value();
-        if (proxy_handles.empty())
-        {
-            throw std::runtime_error("FindService() did not return any service handles for " + kProxyICPSpecifier);
-        }
-
-        return std::make_unique<MWProxy>(MWProxy::Create(proxy_handles.front()).value());
-    }
-
+    std::shared_ptr<InternalConfigProviderProxyFakeState> state_;
     std::unique_ptr<InternalConfigProvider> unit_;
-    std::unique_ptr<MwComSkeleton> skeleton_;
 };
 
-TEST_F(InternalConfigProviderTest, CanConstructWithMWComProxy)
+TEST_F(InternalConfigProviderTest, ConstructorSubscribesToInitialQualifierState)
 {
     RecordProperty("Priority", "3");
-    RecordProperty("DerivationTechnique", "Generation and analysis of equivalence classes");
     RecordProperty("TestType", "Interface test");
     RecordProperty("Verifies", "::score::config_management::config_provider::InternalConfigProvider::InternalConfigProvider()");
     RecordProperty("Description", "This test verifies a successful creation of InternalConfigProvider.");
-    // Given a constructed adaptive proxy of our InternalConfigProvider interface
-    // When constructing our IInternalConfigProvider implementation with it
-    // Then no issue occurs
-    EXPECT_NO_THROW(InternalConfigProvider{CreateProxy()});
+
+    EXPECT_EQ(state_->initial_qualifier_state_subscriptions, 1U);
+}
+
+TEST_F(InternalConfigProviderTest, DestructorUnsubscribesFromLastUpdatedParameterSet)
+{
+    RecordProperty("Priority", "3");
+    RecordProperty("TestType", "Interface test");
+    RecordProperty("Description", "This test verifies the destructor unsubscribes from the event.");
+
+    unit_.reset();
+
+    EXPECT_EQ(state_->last_updated_unsubscriptions, 1U);
 }
 
 class InternalConfigProviderGetInitialQualifierStatePassTest
@@ -147,10 +93,10 @@ TEST_P(InternalConfigProviderGetInitialQualifierStatePassTest, GetInitialQualifi
                    "11397333: This test makes sure InternalConfigProvider can get InitialQualifierState through a "
                    "method GetInitialQualifierState.");
 
-    // Given the InitialQualifierState is provided
-    std::ignore = skeleton_->initial_qualifier_state.Update(std::get<0>(GetParam()));
+    state_->initial_qualifier_state_samples.push_back(std::get<0>(GetParam()));
+
     const auto result = unit_->GetInitialQualifierState(kZeroTimeout);
-    // Then GetInitialQualifierState can get this value
+
     EXPECT_EQ(result, std::get<1>(GetParam()));
 }
 
@@ -167,6 +113,145 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple(static_cast<MwComInitialQualifierStateType>(
                             std::numeric_limits<std::underlying_type_t<MwComInitialQualifierStateType>>::max()),
                         InitialQualifierState::kUndefined)));
+
+TEST_F(InternalConfigProviderTest, GetInitialQualifierStateWithoutSampleReturnsUndefined)
+{
+    RecordProperty("Priority", "3");
+    RecordProperty("TestType", "Boundary test");
+    RecordProperty("Description", "This test verifies kUndefined is returned while no sample was received.");
+
+    EXPECT_EQ(unit_->GetInitialQualifierState(kZeroTimeout), InitialQualifierState::kUndefined);
+}
+
+TEST_F(InternalConfigProviderTest, GetParameterSetReturnsParsedJson)
+{
+    RecordProperty("Priority", "3");
+    RecordProperty("TestType", "Interface test");
+    RecordProperty("Description", "This test verifies the returned payload is parsed and the request is forwarded.");
+    state_->response_content = R"({"a":1})";
+
+    const auto result = unit_->GetParameterSet("MySet", kZeroTimeout, kSizing);
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(state_->last_requested_name, "MySet");
+    EXPECT_EQ(state_->last_requested_max_payload_size, kSizing.max_payload_size);
+}
+
+TEST_F(InternalConfigProviderTest, GetParameterSetFailsForTooLongName)
+{
+    RecordProperty("Priority", "3");
+    RecordProperty("TestType", "Negative test");
+    RecordProperty("Description", "This test verifies names exceeding max_name_length are rejected.");
+
+    const auto result = unit_->GetParameterSet(std::string(kSizing.max_name_length + 1U, 'n'), kZeroTimeout, kSizing);
+
+    ASSERT_FALSE(result.has_value());
+    EXPECT_EQ(result.error(), ConfigProviderError::kParameterSetNameTooLong);
+}
+
+TEST_F(InternalConfigProviderTest, GetParameterSetFailsWhenAllocationFails)
+{
+    RecordProperty("Priority", "3");
+    RecordProperty("TestType", "Negative test");
+    RecordProperty("Description", "This test verifies an allocation failure of the method arguments is reported.");
+    state_->fail_allocate = true;
+
+    const auto result = unit_->GetParameterSet("MySet", kZeroTimeout, kSizing);
+
+    ASSERT_FALSE(result.has_value());
+    EXPECT_EQ(result.error(), ConfigProviderError::kMethodArgumentAllocationFailed);
+}
+
+TEST_F(InternalConfigProviderTest, GetParameterSetFailsWhenCallFails)
+{
+    RecordProperty("Priority", "3");
+    RecordProperty("TestType", "Negative test");
+    RecordProperty("Description", "This test verifies a failing method call is reported.");
+    state_->fail_call = true;
+
+    const auto result = unit_->GetParameterSet("MySet", kZeroTimeout, kSizing);
+
+    ASSERT_FALSE(result.has_value());
+    EXPECT_EQ(result.error(), ConfigProviderError::kGetParameterSetCallFailed);
+}
+
+TEST_F(InternalConfigProviderTest, GetParameterSetMapsNotFoundSentinel)
+{
+    RecordProperty("Priority", "3");
+    RecordProperty("TestType", "Negative test");
+    RecordProperty("Description", "This test verifies the not-found sentinel maps to kParameterSetNotFound.");
+    state_->response_content = std::string{config_daemon::mw_com_icp_types::kParameterSetNotFoundContent};
+
+    const auto result = unit_->GetParameterSet("MySet", kZeroTimeout, kSizing);
+
+    ASSERT_FALSE(result.has_value());
+    EXPECT_EQ(result.error(), ConfigProviderError::kParameterSetNotFound);
+}
+
+TEST_F(InternalConfigProviderTest, GetParameterSetMapsPayloadTooLargeSentinel)
+{
+    RecordProperty("Priority", "3");
+    RecordProperty("TestType", "Negative test");
+    RecordProperty("Description", "This test verifies the too-large sentinel maps to kParameterSetPayloadTooLarge.");
+    state_->response_content = std::string{config_daemon::mw_com_icp_types::kParameterSetPayloadTooLargeContent};
+
+    const auto result = unit_->GetParameterSet("MySet", kZeroTimeout, kSizing);
+
+    ASSERT_FALSE(result.has_value());
+    EXPECT_EQ(result.error(), ConfigProviderError::kParameterSetPayloadTooLarge);
+}
+
+TEST_F(InternalConfigProviderTest, TrySubscribeSubscribesToLastUpdatedParameterSet)
+{
+    RecordProperty("Priority", "3");
+    RecordProperty("TestType", "Interface test");
+    RecordProperty("Description", "This test verifies the event subscription.");
+
+    EXPECT_TRUE(unit_->TrySubscribeToLastUpdatedParameterSetEvent(score::cpp::stop_token{}, [](const std::string_view) {}));
+    EXPECT_EQ(state_->last_updated_subscriptions, 1U);
+}
+
+TEST_F(InternalConfigProviderTest, PollingRoutineReportsLastUpdatedParameterSets)
+{
+    RecordProperty("Priority", "3");
+    RecordProperty("TestType", "Interface test");
+    RecordProperty("Description", "This test verifies updated parameter set names reach the callback.");
+
+    std::promise<std::string> reported;
+    auto reported_future = reported.get_future();
+    std::once_flag once;
+    ASSERT_TRUE(unit_->TrySubscribeToLastUpdatedParameterSetEvent(score::cpp::stop_token{},
+                                                                  [&reported, &once](const std::string_view name) {
+                                                                      std::call_once(once, [&] {
+                                                                          reported.set_value(std::string{name});
+                                                                      });
+                                                                  }));
+    state_->last_updated_samples.push_back("UpdatedSet");
+
+    unit_->StartParameterSetUpdatePollingRoutine(score::cpp::nullopt, std::chrono::milliseconds{10});
+
+    ASSERT_EQ(reported_future.wait_for(std::chrono::seconds{5}), std::future_status::ready);
+    EXPECT_EQ(reported_future.get(), "UpdatedSet");
+    unit_->StopParameterSetUpdatePollingRoutine();
+}
+
+TEST_F(InternalConfigProviderTest, CheckParameterSetUpdatesDoesNotReportWhenSampleRetrievalFails)
+{
+    RecordProperty("Priority", "3");
+    RecordProperty("TestType", "Negative test");
+    RecordProperty("Description", "This test verifies a failing sample retrieval produces no callback.");
+
+    bool called{false};
+    ASSERT_TRUE(unit_->TrySubscribeToLastUpdatedParameterSetEvent(score::cpp::stop_token{}, [&called](const std::string_view) {
+        called = true;
+    }));
+    state_->last_updated_samples.push_back("UpdatedSet");
+    state_->fail_last_updated_get_new_samples = true;
+
+    unit_->CheckParameterSetUpdates();
+
+    EXPECT_FALSE(called);
+}
 
 }  // namespace
 }  // namespace config_provider

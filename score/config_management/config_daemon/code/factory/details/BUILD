@@ -103,12 +103,7 @@ cc_gtest_unit_test(
     name = "unit_test_factory_impl",
     testonly = True,
     srcs = ["factory_impl_test.cpp"],
-    data = ["//score/config_management/config_daemon/config:mw_com_config"],
     features = COMPILER_WARNING_FEATURES,
-    tags = [
-        "exclusive",  # Sandboxing is not properly working with LoLa message passing 2.0 (Ticket-217341)
-        "mw_com",
-    ],
     visibility = [
         "//score/config_management/config_daemon/code/factory:__pkg__",
     ],

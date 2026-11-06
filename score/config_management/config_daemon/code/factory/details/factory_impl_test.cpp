@@ -20,9 +20,6 @@
 
 #include "score/mw/service/provided_services_container.h"
 
-#include "score/config_management/lib/mw_com_types/internal_config_provider_type.h"
-#include "score/mw/com/runtime.h"
-#include "score/mw/com/runtime_configuration.h"
 #include "score/result/error.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -75,12 +72,6 @@ TEST_F(TestFactoryImpl, CreatePluginCollector)
 class TestFactoryImplServices : public ::testing::Test
 {
   protected:
-    static void SetUpTestSuite()
-    {
-        score::mw::com::runtime::RuntimeConfiguration runtime_configuration{
-            "./score/config_management/config_daemon/config/mw_com_config.json"};
-        score::mw::com::runtime::InitializeRuntime(runtime_configuration);
-    }
     void SetUp() override
     {
         unit_ = std::make_unique<FactoryImpl>();
