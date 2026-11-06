@@ -118,7 +118,7 @@ class SemiDynamicSingleInstantiationStrategy final : public mw::service::FindSer
     {
         const std::lock_guard lock{mutex_};
 
-        const auto instance_specifier_result = score::mw::com::InstanceSpecifier::Create(port_identifier_);
+        const auto instance_specifier_result = score::mw::com::InstanceSpecifier::Create(std::string{port_identifier_});
         SCORE_LANGUAGE_FUTURECPP_ASSERT_PRD(instance_specifier_result.has_value());
 
         class CallbackState
