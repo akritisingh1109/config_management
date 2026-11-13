@@ -30,6 +30,7 @@ cc_library(
     features = COMPILER_WARNING_FEATURES,
     tags = ["FUSA"],
     visibility = [
+        "//platform/aas/test/sysfunc/parameter_provider:__subpackages__",
         "//score:__subpackages__",
         "//score/config_management/config_daemon/code:__subpackages__",
     ],

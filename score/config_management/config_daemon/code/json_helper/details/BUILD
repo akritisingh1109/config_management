@@ -22,6 +22,7 @@ cc_library(
     features = COMPILER_WARNING_FEATURES,
     tags = ["FFI"],
     visibility = [
+        "//platform/aas/test/sysfunc/parameter_provider/parameter_provider_app:__subpackages__",
         "//score:__subpackages__",
         "//score/config_management/config_daemon/code:__subpackages__",
     ],
