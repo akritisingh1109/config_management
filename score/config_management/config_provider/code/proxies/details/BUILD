@@ -1,12 +1,11 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("@score_baselibs//score/language/safecpp:toolchain_features.bzl", "COMPILER_WARNING_FEATURES")
-load(":custom.bzl", "load_custom_targets")
 
 # MW COM proxy implementation (always exported to open-source)
 cc_library(
     name = "details_mw_com",
-    srcs = ["mw_com/internal_config_provider_impl.cpp"],
-    hdrs = ["mw_com/internal_config_provider_impl.h"],
+    srcs = ["internal_config_provider_impl.cpp"],
+    hdrs = ["internal_config_provider_impl.h"],
     features = COMPILER_WARNING_FEATURES,
     tags = ["FUSA"],
     visibility = [
@@ -27,14 +26,14 @@ cc_library(
 filegroup(
     name = "test_mw_com_config",
     testonly = True,
-    srcs = ["mw_com/test_mw_com_config.json"],
+    srcs = ["test_mw_com_config.json"],
     visibility = ["//score/config_management/config_provider:__subpackages__"],
 )
 
 # MW COM unit test
 cc_test(
     name = "unit_test_mw",
-    srcs = ["mw_com/internal_config_provider_impl_test.cpp"],
+    srcs = ["internal_config_provider_impl_test.cpp"],
     data = [":test_mw_com_config"],
     features = COMPILER_WARNING_FEATURES,
     tags = [
@@ -49,6 +48,3 @@ cc_test(
         "@score_baselibs//score/concurrency:notification",
     ],
 )
-
-# Load ARA COM proxy targets (will be stubbed in open-source)
-load_custom_targets()
